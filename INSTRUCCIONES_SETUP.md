@@ -1,4 +1,4 @@
-# Instrucciones de Setup - Sistema de Gestión de Personal
+# Instrucciones de Setup - SysPersonal
 
 ## Paso 1: Ejecutar Scripts SQL en Supabase
 

@@ -9,7 +9,7 @@ export default function Home() {
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <h1 className="text-xl font-bold text-blue-600">Sistema de Gestión de Personal</h1>
+          <h1 className="text-xl font-bold text-blue-600">SysPersonal</h1>
           <Link href="/auth/login">
             <Button>Iniciar Sesión</Button>
           </Link>
@@ -120,7 +120,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t bg-gray-50 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-gray-600">
-          <p>Sistema de Gestión de Personal - TFI Administración de Recursos</p>
+          <p>SysPersonal - Sistema de Gestión de Personal</p>
           <p className="mt-2">Universidad Tecnológica Nacional - Facultad Regional Tucumán</p>
         </div>
       </footer>

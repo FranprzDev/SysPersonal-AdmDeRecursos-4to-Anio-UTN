@@ -7,9 +7,9 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Sistema de Gestión de Personal",
-  description: "TFI - Administración de Recursos",
-    generator: 'v0.app'
+  title: "SysPersonal",
+  description: "Sistema de Gestión de Personal",
+  generator: "v0.app",
 }
 
 export default function RootLayout({

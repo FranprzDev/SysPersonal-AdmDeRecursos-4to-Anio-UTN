@@ -1,6 +1,6 @@
-# Sistema de Gestión de Personal
+# SysPersonal
 
-Trabajo Final Integrador - Administración de Recursos  
+Sistema de Gestión de Personal  
 Universidad Tecnológica Nacional - Facultad Regional Tucumán
 
 ## Descripción
