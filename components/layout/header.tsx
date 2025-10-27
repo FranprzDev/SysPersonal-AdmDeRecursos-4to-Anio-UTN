@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { LogOut, User } from "lucide-react"
 import {
@@ -12,15 +11,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
 
 export function Header({ user }: { user: any }) {
   const router = useRouter()
-  const supabase = createClient()
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push("/auth/login")
-    router.refresh()
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+      })
+
+      if (response.ok) {
+        toast.success("Sesión cerrada correctamente")
+        router.push("/auth/login")
+        router.refresh()
+      } else {
+        toast.error("Error al cerrar sesión")
+      }
+    } catch (error) {
+      console.error("[v0] Error al cerrar sesión:", error)
+      toast.error("Error al cerrar sesión")
+    }
   }
 
   return (

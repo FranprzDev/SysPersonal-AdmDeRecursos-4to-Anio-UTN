@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       .eq("email", email)
       .eq("password", password)
       .eq("activo", true)
-      .single()
+      .maybeSingle()
 
     if (error || !user) {
       return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 })
