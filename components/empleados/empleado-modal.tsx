@@ -28,6 +28,7 @@ type EmpleadoFormData = {
   email: string
   id_sector: string
   dni_supervisor: string
+  activo: string
 }
 
 export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: EmpleadoModalProps) {
@@ -55,11 +56,13 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
       email: "",
       id_sector: "",
       dni_supervisor: "",
+      activo: "true",
     },
   })
 
   const id_sector = watch("id_sector")
   const dni_supervisor = watch("dni_supervisor")
+  const activo = watch("activo")
 
   useEffect(() => {
     if (empleado) {
@@ -73,6 +76,7 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
         email: empleado.email || "",
         id_sector: empleado.id_sector?.toString() || "",
         dni_supervisor: empleado.dni_supervisor || "",
+        activo: empleado.activo ? "true" : "false",
       })
     } else {
       reset({
@@ -85,6 +89,7 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
         email: "",
         id_sector: "",
         dni_supervisor: "",
+        activo: "true",
       })
     }
   }, [empleado, open, reset])
@@ -115,7 +120,7 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
         ...data,
         id_sector: data.id_sector ? Number.parseInt(data.id_sector) : null,
         dni_supervisor: data.dni_supervisor || null,
-        activo: true,
+        activo: data.activo === "true",
       }
 
       if (empleado) {
@@ -171,12 +176,40 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
             </div>
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre *</Label>
-              <Input id="nombre" {...register("nombre", { required: "El nombre es obligatorio" })} />
+              <Input
+                id="nombre"
+                {...register("nombre", {
+                  required: "El nombre es obligatorio",
+                  pattern: {
+                    value: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/,
+                    message: "El nombre solo puede contener letras",
+                  },
+                })}
+                onKeyPress={(e) => {
+                  if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]$/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+              />
               {errors.nombre && <p className="text-sm text-red-500">{errors.nombre.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="apellido">Apellido *</Label>
-              <Input id="apellido" {...register("apellido", { required: "El apellido es obligatorio" })} />
+              <Input
+                id="apellido"
+                {...register("apellido", {
+                  required: "El apellido es obligatorio",
+                  pattern: {
+                    value: /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/,
+                    message: "El apellido solo puede contener letras",
+                  },
+                })}
+                onKeyPress={(e) => {
+                  if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]$/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+              />
               {errors.apellido && <p className="text-sm text-red-500">{errors.apellido.message}</p>}
             </div>
             <div className="space-y-2">
@@ -190,7 +223,21 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
             </div>
             <div className="space-y-2">
               <Label htmlFor="telefono">Teléfono</Label>
-              <Input id="telefono" {...register("telefono")} />
+              <Input
+                id="telefono"
+                {...register("telefono", {
+                  pattern: {
+                    value: /^[0-9]*$/,
+                    message: "El teléfono solo puede contener números",
+                  },
+                })}
+                onKeyPress={(e) => {
+                  if (!/^[0-9]$/.test(e.key)) {
+                    e.preventDefault()
+                  }
+                }}
+              />
+              {errors.telefono && <p className="text-sm text-red-500">{errors.telefono.message}</p>}
             </div>
             <div className="col-span-2 space-y-2">
               <Label htmlFor="direccion">Dirección</Label>
@@ -223,6 +270,18 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
                       {sup.apellido}, {sup.nombre}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="activo">Estado</Label>
+              <Select value={activo} onValueChange={(value) => setValue("activo", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Activo</SelectItem>
+                  <SelectItem value="false">Inactivo</SelectItem>
                 </SelectContent>
               </Select>
             </div>

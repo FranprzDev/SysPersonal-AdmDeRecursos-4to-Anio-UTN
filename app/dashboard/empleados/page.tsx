@@ -7,7 +7,6 @@ export default async function EmpleadosPage() {
   const { data: empleados } = await supabase
     .from("empleados")
     .select("*")
-    .eq("activo", true)
     .order("apellido", { ascending: true })
 
   const { data: sectores } = await supabase.from("sectores").select("id_sector, nombre_sector")
