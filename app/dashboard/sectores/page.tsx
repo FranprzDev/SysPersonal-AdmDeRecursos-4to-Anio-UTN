@@ -15,11 +15,18 @@ export default function SectoresPage() {
   const supabase = createClient()
 
   const fetchSectores = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("sectores")
-      .select("*")
-      .eq("activo", true)
+      .select(`
+        *,
+        supervisor:empleados!sectores_dni_supervisor_fkey(nombre, apellido)
+      `)
       .order("nombre_sector", { ascending: true })
+
+    if (error) {
+      console.error("Error fetching sectores:", error)
+      return
+    }
 
     if (data) setSectores(data)
   }

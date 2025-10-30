@@ -12,10 +12,11 @@ export default async function DesempenoPage() {
       id_sector,
       sector:sectores(nombre_sector)
     `)
+    .eq("activo", true)
 
   const sectoresCount = empleadosPorSector?.reduce(
     (acc, emp) => {
-      const sector = emp.sector?.nombre_sector || "Sin sector"
+      const sector = emp.sector?.[0]?.nombre_sector || "Sin sector"
       acc[sector] = (acc[sector] || 0) + 1
       return acc
     },

@@ -23,7 +23,7 @@ export function ExportButtons({ tipo }: ExportButtonsProps) {
       let filename = ""
 
       if (tipo === "empleados") {
-        const { data: empleados } = await supabase
+        const { data: empleados, error } = await supabase
           .from("empleados")
           .select(`
             dni,
@@ -37,46 +37,53 @@ export function ExportButtons({ tipo }: ExportButtonsProps) {
             sector:sectores(nombre_sector),
             supervisor:empleados!empleados_dni_supervisor_fkey(nombre, apellido)
           `)
+          .eq("activo", true)
           .order("apellido")
+
+        if (error) throw error
 
         data =
           empleados?.map((e) => ({
             DNI: e.dni,
             Nombre: e.nombre,
             Apellido: e.apellido,
-            "Fecha Nacimiento": e.fecha_nacimiento,
-            Dirección: e.direccion,
-            Teléfono: e.telefono,
-            Email: e.email,
+            "Fecha Nacimiento": e.fecha_nacimiento || "",
+            Dirección: e.direccion || "",
+            Teléfono: e.telefono || "",
+            Email: e.email || "",
             Estado: e.activo ? "Activo" : "Inactivo",
-            Sector: e.sector?.nombre_sector || "",
-            Supervisor: e.supervisor ? `${e.supervisor.nombre} ${e.supervisor.apellido}` : "",
+            Sector: e.sector?.[0]?.nombre_sector || "",
+            Supervisor: e.supervisor ? `${e.supervisor[0].nombre} ${e.supervisor[0].apellido}` : "",
           })) || []
         filename = "empleados.xlsx"
       } else if (tipo === "sectores") {
-        const { data: sectores } = await supabase
+        const { data: sectores, error } = await supabase
           .from("sectores")
           .select(`
             id_sector,
             nombre_sector,
             descripcion,
-            supervisor:empleados(nombre, apellido)
+            supervisor:empleados!sectores_dni_supervisor_fkey(nombre, apellido)
           `)
           .order("nombre_sector")
+
+        if (error) throw error
 
         data =
           sectores?.map((s) => ({
             ID: s.id_sector,
             Nombre: s.nombre_sector,
             Descripción: s.descripcion || "",
-            Supervisor: s.supervisor ? `${s.supervisor.nombre} ${s.supervisor.apellido}` : "",
+            Supervisor: s.supervisor ? `${s.supervisor[0]?.nombre} ${s.supervisor[0]?.apellido}` : "",
           })) || []
         filename = "sectores.xlsx"
       } else if (tipo === "capacitaciones") {
-        const { data: capacitaciones } = await supabase
+        const { data: capacitaciones, error } = await supabase
           .from("capacitaciones")
           .select("*")
           .order("fecha_inicio", { ascending: false })
+
+        if (error) throw error
 
         data =
           capacitaciones?.map((c) => ({

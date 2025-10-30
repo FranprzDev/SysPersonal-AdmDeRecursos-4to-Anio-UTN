@@ -35,12 +35,12 @@ FOR SELECT USING (true);
 CREATE POLICY "Admin puede gestionar roles" ON roles
 FOR ALL USING (auth.jwt() ->> 'role' = 'admin');
 
--- Políticas para fichas médicas (solo admin y RRHH)
-CREATE POLICY "Admin y RRHH pueden ver fichas médicas" ON fichas_medicas
-FOR SELECT USING (auth.jwt() ->> 'role' IN ('admin', 'rrhh'));
+-- Políticas para fichas médicas (usuarios autenticados)
+CREATE POLICY "Authenticated users can view fichas médicas" ON fichas_medicas
+FOR SELECT USING (auth.role() = 'authenticated');
 
-CREATE POLICY "Admin y RRHH pueden gestionar fichas médicas" ON fichas_medicas
-FOR ALL USING (auth.jwt() ->> 'role' IN ('admin', 'rrhh'));
+CREATE POLICY "Authenticated users can manage fichas médicas" ON fichas_medicas
+FOR ALL USING (auth.role() = 'authenticated');
 
 -- Políticas para asistencias
 CREATE POLICY "Empleados pueden ver su asistencia" ON asistencias
