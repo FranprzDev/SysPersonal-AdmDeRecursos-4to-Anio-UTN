@@ -2,7 +2,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2, Users } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -21,9 +21,10 @@ interface CapacitacionesTableProps {
   capacitaciones: any[]
   onEdit: (capacitacion: any) => void
   onDelete: () => void
+  onAsignar: (capacitacion: any) => void
 }
 
-export function CapacitacionesTable({ capacitaciones, onEdit, onDelete }: CapacitacionesTableProps) {
+export function CapacitacionesTable({ capacitaciones, onEdit, onDelete, onAsignar }: CapacitacionesTableProps) {
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -76,12 +77,15 @@ export function CapacitacionesTable({ capacitaciones, onEdit, onDelete }: Capaci
                 <TableCell>{cap.fecha_fin ? new Date(cap.fecha_fin).toLocaleDateString() : "-"}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(cap)}>
+                    <Button variant="ghost" size="icon" onClick={() => onAsignar(cap)} title="Asignar empleados">
+                      <Users className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(cap)} title="Editar">
                       <Edit className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" title="Eliminar">
                           <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>
                       </AlertDialogTrigger>

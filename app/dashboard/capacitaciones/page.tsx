@@ -6,11 +6,14 @@ import { CapacitacionesTable } from "@/components/capacitaciones/capacitaciones-
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { CapacitacionModal } from "@/components/capacitaciones/capacitacion-modal"
+import { AsignarCapacitacion } from "@/components/capacitaciones/asignar-capacitacion"
 
 export default function CapacitacionesPage() {
   const [capacitaciones, setCapacitaciones] = useState<any[]>([])
-  const [modalOpen, setModalOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState<boolean>(false)
+  const [asignarModalOpen, setAsignarModalOpen] = useState<boolean>(false)
   const [selectedCapacitacion, setSelectedCapacitacion] = useState<any>(null)
+  const [selectedCapacitacionAsignar, setSelectedCapacitacionAsignar] = useState<any>(null)
   const supabase = createClient()
 
   const loadCapacitaciones = async () => {
@@ -32,6 +35,11 @@ export default function CapacitacionesPage() {
     setModalOpen(true)
   }
 
+  const handleAsignar = (capacitacion: any) => {
+    setSelectedCapacitacionAsignar(capacitacion)
+    setAsignarModalOpen(true)
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -45,7 +53,12 @@ export default function CapacitacionesPage() {
         </Button>
       </div>
 
-      <CapacitacionesTable capacitaciones={capacitaciones} onEdit={handleEdit} onDelete={loadCapacitaciones} />
+      <CapacitacionesTable
+        capacitaciones={capacitaciones}
+        onEdit={handleEdit}
+        onDelete={loadCapacitaciones}
+        onAsignar={handleAsignar}
+      />
 
       <CapacitacionModal
         open={modalOpen}
@@ -53,6 +66,15 @@ export default function CapacitacionesPage() {
         capacitacion={selectedCapacitacion}
         onSuccess={loadCapacitaciones}
       />
+
+      {selectedCapacitacionAsignar && (
+        <AsignarCapacitacion
+          capacitacionId={selectedCapacitacionAsignar.id_capacitacion}
+          open={asignarModalOpen}
+          onOpenChange={setAsignarModalOpen}
+          onSuccess={loadCapacitaciones}
+        />
+      )}
     </div>
   )
 }
