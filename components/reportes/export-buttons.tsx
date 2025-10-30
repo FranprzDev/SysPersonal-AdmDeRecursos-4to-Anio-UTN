@@ -23,60 +23,86 @@ export function ExportButtons({ tipo }: ExportButtonsProps) {
       let filename = ""
 
       if (tipo === "empleados") {
-        const { data: empleados } = await supabase
+
+        const { data: empleados, error: empleadosError } = await supabase
           .from("empleados")
-          .select(`
-            dni,
-            nombre,
-            apellido,
-            fecha_nacimiento,
-            direccion,
-            telefono,
-            email,
-            activo,
-            sector:sectores(nombre_sector),
-            supervisor:empleados!empleados_dni_supervisor_fkey(nombre, apellido)
-          `)
+          .select("*")
+          .eq("activo", true)
           .order("apellido")
 
+        if (empleadosError) {
+          throw empleadosError
+        }
+
+        const { data: sectores, error: sectoresError } = await supabase
+          .from("sectores")
+          .select("id_sector, nombre_sector")
+
+        if (sectoresError) {
+          throw sectoresError
+        }
+
+        const { data: supervisores, error: supervisoresError } = await supabase
+          .from("empleados")
+          .select("dni, nombre, apellido")
+          .eq("activo", true)
+
+        if (supervisoresError) {
+          throw supervisoresError
+        }
+
         data =
-          empleados?.map((e) => ({
-            DNI: e.dni,
-            Nombre: e.nombre,
-            Apellido: e.apellido,
-            "Fecha Nacimiento": e.fecha_nacimiento,
-            Dirección: e.direccion,
-            Teléfono: e.telefono,
-            Email: e.email,
-            Estado: e.activo ? "Activo" : "Inactivo",
-            Sector: e.sector?.nombre_sector || "",
-            Supervisor: e.supervisor ? `${e.supervisor.nombre} ${e.supervisor.apellido}` : "",
-          })) || []
+          empleados?.map((e) => {
+            const sector = sectores?.find((s) => s.id_sector === e.id_sector)
+            const supervisor = supervisores?.find((s) => s.dni === e.dni_supervisor)
+            return {
+              DNI: e.dni,
+              Nombre: e.nombre,
+              Apellido: e.apellido,
+              "Fecha Nacimiento": e.fecha_nacimiento || "",
+              Dirección: e.direccion || "",
+              Teléfono: e.telefono || "",
+              Email: e.email || "",
+              Estado: e.activo ? "Activo" : "Inactivo",
+              Sector: sector?.nombre_sector || "",
+              Supervisor: supervisor ? `${supervisor.nombre} ${supervisor.apellido}` : "",
+            }
+          }) || []
         filename = "empleados.xlsx"
       } else if (tipo === "sectores") {
-        const { data: sectores } = await supabase
+
+        const { data: sectores, error } = await supabase
           .from("sectores")
           .select(`
             id_sector,
             nombre_sector,
             descripcion,
-            supervisor:empleados(nombre, apellido)
+            supervisor:empleados!sectores_dni_supervisor_fkey(nombre, apellido)
           `)
           .order("nombre_sector")
+
+        if (error) {
+          throw error
+        }
 
         data =
           sectores?.map((s) => ({
             ID: s.id_sector,
             Nombre: s.nombre_sector,
             Descripción: s.descripcion || "",
-            Supervisor: s.supervisor ? `${s.supervisor.nombre} ${s.supervisor.apellido}` : "",
+            Supervisor: s.supervisor ? `${s.supervisor[0]?.nombre} ${s.supervisor[0]?.apellido}` : "",
           })) || []
         filename = "sectores.xlsx"
       } else if (tipo === "capacitaciones") {
-        const { data: capacitaciones } = await supabase
+
+        const { data: capacitaciones, error } = await supabase
           .from("capacitaciones")
           .select("*")
           .order("fecha_inicio", { ascending: false })
+
+        if (error) {
+          throw error
+        }
 
         data =
           capacitaciones?.map((c) => ({
@@ -95,12 +121,12 @@ export function ExportButtons({ tipo }: ExportButtonsProps) {
       XLSX.utils.book_append_sheet(workbook, worksheet, tipo)
 
       XLSX.writeFile(workbook, filename)
-
       toast({
         title: "Exportación exitosa",
         description: `Se ha exportado ${data.length} registros`,
       })
     } catch (error: any) {
+
       toast({
         title: "Error al exportar",
         description: error.message,

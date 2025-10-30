@@ -72,7 +72,7 @@ export function SectoresTable({ sectores, onEdit, onDelete }: SectoresTableProps
                 <TableCell className="font-medium">{sector.nombre_sector}</TableCell>
                 <TableCell>{sector.descripcion || "-"}</TableCell>
                 <TableCell>
-                  {sector.supervisor ? `${sector.supervisor.nombre} ${sector.supervisor.apellido}` : "-"}
+                  {sector.supervisor ? `${sector.supervisor.nombre} ${sector.supervisor.apellido}` : sector.dni_supervisor || "-"}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">

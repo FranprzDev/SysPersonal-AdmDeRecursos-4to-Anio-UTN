@@ -8,24 +8,38 @@ import { Users, GraduationCap, Clock, TrendingUp } from "lucide-react"
 export default async function DesempenoPage() {
   const supabase = await createServerSupabaseClient()
 
-  const { data: empleadosPorSector } = await supabase.from("empleados").select(`
-      id_sector,
-      sector:sectores(nombre_sector)
-    `)
+  const { data: empleados } = await supabase
+    .from("empleados")
+    .select("id_sector")
+    .eq("activo", true)
 
-  const sectoresCount = empleadosPorSector?.reduce(
+  const sectoresCount = empleados?.reduce(
     (acc, emp) => {
-      const sector = emp.sector?.nombre_sector || "Sin sector"
-      acc[sector] = (acc[sector] || 0) + 1
+      const idSector = emp.id_sector ?? "sin_sector"
+      acc[idSector] = (acc[idSector] || 0) + 1
       return acc
     },
-    {} as Record<string, number>,
+    {} as Record<string | number, number>,
   )
 
-  const chartDataSectores = Object.entries(sectoresCount || {}).map(([sector, count]) => ({
-    sector,
-    empleados: count,
-  }))
+  const { data: sectores } = await supabase
+    .from("sectores")
+    .select("id_sector, nombre_sector")
+
+  const sectoresMap = new Map(
+    sectores?.map((s) => [s.id_sector, s.nombre_sector]) || [],
+  )
+
+  const chartDataSectores = Object.entries(sectoresCount || {})
+    .map(([idSector, count]) => {
+      const sectorId = idSector === "sin_sector" ? null : Number(idSector)
+      const nombreSector = sectorId ? sectoresMap.get(sectorId) || "Sin sector" : "Sin sector"
+      return {
+        sector: nombreSector,
+        empleados: count,
+      }
+    })
+    .filter((item) => item.empleados > 0)
 
   const { count: totalEmpleados } = await supabase
     .from("empleados")
