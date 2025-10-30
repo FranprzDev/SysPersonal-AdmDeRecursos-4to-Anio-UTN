@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { createClient } from "@/lib/supabase/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -12,6 +12,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { FileText, Upload, X, Download } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface FichaMedicaModalProps {
   isOpen: boolean
@@ -34,6 +36,9 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [empleados, setEmpleados] = useState<any[]>([])
+  const [previewFile, setPreviewFile] = useState<File | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -64,6 +69,8 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
   useEffect(() => {
     if (isOpen) {
       loadEmpleados()
+      setPreviewFile(null)
+      setIsDragging(false)
       if (ficha) {
         reset({
           dni_empleado: ficha.dni_empleado || "",
@@ -100,35 +107,143 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
     setEmpleados(data || [])
   }
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    setUploading(true)
-    try {
-      const fileExt = file.name.split(".").pop()
-      const fileName = `${Math.random()}.${fileExt}`
-      const filePath = `fichas-medicas/${fileName}`
+    const maxSize = 10 * 1024 * 1024
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
 
-      const { error: uploadError } = await supabase.storage.from("documentos").upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("documentos").getPublicUrl(filePath)
-
-      setValue("documento_adjunto", publicUrl)
-      toast({ title: "Archivo subido correctamente" })
-    } catch (error: any) {
+    if (file.size > maxSize) {
       toast({
         title: "Error al subir archivo",
-        description: error.message,
+        description: "El archivo es demasiado grande. Máximo 10MB",
         variant: "destructive",
       })
+      return
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Error al subir archivo",
+        description: "Tipo de archivo no permitido. Solo PDF, JPEG y PNG",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setPreviewFile(file)
+    handleFileUpload(file)
+  }
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const response = await fetch("/api/storage/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al subir el archivo")
+      }
+
+      setValue("documento_adjunto", result.url)
+      setPreviewFile(null)
+      toast({
+        title: "Archivo subido correctamente",
+        description: `Archivo: ${file.name}`,
+      })
+    } catch (error: any) {
+      console.error("Error completo:", error)
+      toast({
+        title: "Error al subir archivo",
+        description: error.message || "Error desconocido al subir el archivo",
+        variant: "destructive",
+      })
+      setPreviewFile(null)
     } finally {
       setUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
+  }
+
+  const handleRemoveFile = () => {
+    setPreviewFile(null)
+    setValue("documento_adjunto", "")
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const getFileNameFromUrl = (url: string): string => {
+    try {
+      const urlParts = url.split("/")
+      return urlParts[urlParts.length - 1] || "documento"
+    } catch {
+      return "documento"
+    }
+  }
+
+  const getFileType = (url: string): "pdf" | "image" => {
+    if (url.toLowerCase().includes(".pdf")) return "pdf"
+    return "image"
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!uploading) {
+      setIsDragging(true)
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    if (uploading) return
+
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+
+    const maxSize = 10 * 1024 * 1024
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
+
+    if (file.size > maxSize) {
+      toast({
+        title: "Error al subir archivo",
+        description: "El archivo es demasiado grande. Máximo 10MB",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Error al subir archivo",
+        description: "Tipo de archivo no permitido. Solo PDF, JPEG y PNG",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setPreviewFile(file)
+    handleFileUpload(file)
   }
 
   const onSubmit = async (data: FichaMedicaFormData) => {
@@ -224,8 +339,103 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
 
           <div className="space-y-2">
             <Label htmlFor="documento">Documento Adjunto</Label>
-            <Input id="documento" type="file" onChange={handleFileUpload} disabled={uploading} />
-            {documento_adjunto && <p className="text-sm text-green-600">Archivo adjunto guardado</p>}
+            <div className="space-y-3">
+              {documento_adjunto && !previewFile ? (
+                <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/50">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{getFileNameFromUrl(documento_adjunto)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {getFileType(documento_adjunto) === "pdf" ? "PDF" : "Imagen"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        window.open(documento_adjunto, "_blank")
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      Ver
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveFile}
+                      disabled={uploading}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : previewFile ? (
+                <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/50">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{previewFile.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(previewFile.size / 1024).toFixed(2)} KB
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {uploading ? (
+                      <span className="text-sm text-muted-foreground">Subiendo...</span>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveFile}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+
+              <div
+                className={cn(
+                  "relative border-2 border-dashed rounded-lg p-6 transition-colors",
+                  uploading
+                    ? "border-muted bg-muted/50 cursor-not-allowed"
+                    : isDragging
+                      ? "border-primary bg-primary/5 cursor-pointer"
+                      : "border-muted-foreground/25 hover:border-muted-foreground/50 cursor-pointer bg-muted/20"
+                )}
+                onClick={() => {
+                  if (!uploading) {
+                    fileInputRef.current?.click()
+                  }
+                }}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <input
+                  ref={fileInputRef}
+                  id="documento"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileSelect}
+                  disabled={uploading}
+                  className="hidden"
+                />
+                <div className="flex flex-col items-center justify-center gap-2 text-center">
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                  <div className="text-sm">
+                    <span className="font-medium text-primary">Haz clic para subir</span> o arrastra y suelta
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    PDF, JPEG o PNG (máx. 10MB)
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-4 justify-end">
