@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server"
-import { logout } from "@/lib/auth"
 
 export async function POST() {
   try {
-    await logout()
-    return NextResponse.json({ success: true })
+    const response = NextResponse.json({ success: true })
+    response.cookies.delete("user_session")
+    return response
   } catch (error) {
-    console.error("[v0] Error en logout:", error)
     return NextResponse.json({ error: "Error al cerrar sesión" }, { status: 500 })
   }
 }

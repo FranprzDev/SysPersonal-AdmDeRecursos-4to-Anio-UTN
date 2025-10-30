@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,33 +18,50 @@ interface SectorModalProps {
   onSuccess: () => void
 }
 
+type SectorFormData = {
+  nombre_sector: string
+  descripcion: string
+  dni_supervisor: string
+}
+
 export function SectorModal({ open, onOpenChange, sector, onSuccess }: SectorModalProps) {
   const [loading, setLoading] = useState(false)
   const [supervisores, setSupervisores] = useState<any[]>([])
   const { toast } = useToast()
   const supabase = createClient()
 
-  const [formData, setFormData] = useState({
-    nombre_sector: "",
-    descripcion: "",
-    dni_supervisor: "none",
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<SectorFormData>({
+    defaultValues: {
+      nombre_sector: "",
+      descripcion: "",
+      dni_supervisor: "none",
+    },
   })
+
+  const dni_supervisor = watch("dni_supervisor")
 
   useEffect(() => {
     if (sector) {
-      setFormData({
+      reset({
         nombre_sector: sector.nombre_sector || "",
         descripcion: sector.descripcion || "",
         dni_supervisor: sector.dni_supervisor || "none",
       })
     } else {
-      setFormData({
+      reset({
         nombre_sector: "",
         descripcion: "",
         dni_supervisor: "none",
       })
     }
-  }, [sector, open])
+  }, [sector, open, reset])
 
   useEffect(() => {
     const fetchSupervisores = async () => {
@@ -63,27 +79,22 @@ export function SectorModal({ open, onOpenChange, sector, onSuccess }: SectorMod
     }
   }, [open])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: SectorFormData) => {
     setLoading(true)
 
     try {
       const dataToSave = {
-        ...formData,
-        dni_supervisor: formData.dni_supervisor === "none" ? null : formData.dni_supervisor,
+        ...data,
+        dni_supervisor: data.dni_supervisor === "none" ? null : data.dni_supervisor,
       }
 
       if (sector) {
         const { error } = await supabase.from("sectores").update(dataToSave).eq("id_sector", sector.id_sector)
-
         if (error) throw error
-
         toast({ title: "Sector actualizado correctamente" })
       } else {
         const { error } = await supabase.from("sectores").insert([dataToSave])
-
         if (error) throw error
-
         toast({ title: "Sector creado correctamente" })
       }
 
@@ -110,33 +121,24 @@ export function SectorModal({ open, onOpenChange, sector, onSuccess }: SectorMod
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="nombre_sector">Nombre del Sector *</Label>
             <Input
               id="nombre_sector"
-              value={formData.nombre_sector}
-              onChange={(e) => setFormData({ ...formData, nombre_sector: e.target.value })}
-              required
+              {...register("nombre_sector", { required: "El nombre del sector es obligatorio" })}
             />
+            {errors.nombre_sector && <p className="text-sm text-red-500">{errors.nombre_sector.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="descripcion">Descripción</Label>
-            <Textarea
-              id="descripcion"
-              value={formData.descripcion}
-              onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-              rows={4}
-            />
+            <Textarea id="descripcion" {...register("descripcion")} rows={4} />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="dni_supervisor">Supervisor del Sector</Label>
-            <Select
-              value={formData.dni_supervisor}
-              onValueChange={(value) => setFormData({ ...formData, dni_supervisor: value })}
-            >
+            <Select value={dni_supervisor} onValueChange={(value) => setValue("dni_supervisor", value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar supervisor" />
               </SelectTrigger>

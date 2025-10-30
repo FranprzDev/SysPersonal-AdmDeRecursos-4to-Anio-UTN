@@ -27,12 +27,20 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       })
 
-      const data = await response.json()
+      let data
+      const contentType = response.headers.get("content-type")
+
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json()
+      } else {
+        const text = await response.text()
+        throw new Error("Error del servidor. Por favor intenta nuevamente.")
+      }
 
       if (!response.ok) {
         toast({
           title: "Credenciales incorrectas",
-          description: "Verifica tu email y contraseña. Puedes usar las credenciales de prueba mostradas abajo.",
+          description: data.error || "Verifica tu email y contraseña.",
           variant: "destructive",
         })
         setLoading(false)
@@ -49,7 +57,7 @@ export default function LoginPage() {
     } catch (error: any) {
       toast({
         title: "Error de conexión",
-        description: "No se pudo conectar con el servidor. Intenta nuevamente.",
+        description: error.message || "No se pudo conectar con el servidor. Intenta nuevamente.",
         variant: "destructive",
       })
       setLoading(false)
@@ -66,7 +74,7 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
@@ -77,7 +85,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">Contraseña *</Label>
               <Input
                 id="password"
                 type="password"

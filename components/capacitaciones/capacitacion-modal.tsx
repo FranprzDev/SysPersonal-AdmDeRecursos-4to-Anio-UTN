@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,22 +17,37 @@ interface CapacitacionModalProps {
   onSuccess: () => void
 }
 
+type CapacitacionFormData = {
+  nombre_capacitacion: string
+  institucion: string
+  fecha_inicio: string
+  fecha_fin: string
+  descripcion: string
+}
+
 export function CapacitacionModal({ open, onOpenChange, capacitacion, onSuccess }: CapacitacionModalProps) {
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const supabase = createClient()
 
-  const [formData, setFormData] = useState({
-    nombre_capacitacion: "",
-    institucion: "",
-    fecha_inicio: "",
-    fecha_fin: "",
-    descripcion: "",
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CapacitacionFormData>({
+    defaultValues: {
+      nombre_capacitacion: "",
+      institucion: "",
+      fecha_inicio: "",
+      fecha_fin: "",
+      descripcion: "",
+    },
   })
 
   useEffect(() => {
     if (capacitacion) {
-      setFormData({
+      reset({
         nombre_capacitacion: capacitacion.nombre_capacitacion || "",
         institucion: capacitacion.institucion || "",
         fecha_inicio: capacitacion.fecha_inicio || "",
@@ -41,7 +55,7 @@ export function CapacitacionModal({ open, onOpenChange, capacitacion, onSuccess 
         descripcion: capacitacion.descripcion || "",
       })
     } else {
-      setFormData({
+      reset({
         nombre_capacitacion: "",
         institucion: "",
         fecha_inicio: "",
@@ -49,22 +63,21 @@ export function CapacitacionModal({ open, onOpenChange, capacitacion, onSuccess 
         descripcion: "",
       })
     }
-  }, [capacitacion, open])
+  }, [capacitacion, open, reset])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: CapacitacionFormData) => {
     setLoading(true)
 
     try {
       if (capacitacion) {
         const { error } = await supabase
           .from("capacitaciones")
-          .update(formData)
+          .update(data)
           .eq("id_capacitacion", capacitacion.id_capacitacion)
         if (error) throw error
         toast({ title: "Capacitación actualizada correctamente" })
       } else {
-        const { error } = await supabase.from("capacitaciones").insert([formData])
+        const { error } = await supabase.from("capacitaciones").insert([data])
         if (error) throw error
         toast({ title: "Capacitación creada correctamente" })
       }
@@ -88,55 +101,37 @@ export function CapacitacionModal({ open, onOpenChange, capacitacion, onSuccess 
         <DialogHeader>
           <DialogTitle>{capacitacion ? "Editar Capacitación" : "Nueva Capacitación"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-2">
               <Label htmlFor="nombre_capacitacion">Nombre de la Capacitación *</Label>
               <Input
                 id="nombre_capacitacion"
-                value={formData.nombre_capacitacion}
-                onChange={(e) => setFormData({ ...formData, nombre_capacitacion: e.target.value })}
-                required
+                {...register("nombre_capacitacion", { required: "El nombre de la capacitación es obligatorio" })}
               />
+              {errors.nombre_capacitacion && (
+                <p className="text-sm text-red-500">{errors.nombre_capacitacion.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="institucion">Institución</Label>
-              <Input
-                id="institucion"
-                value={formData.institucion}
-                onChange={(e) => setFormData({ ...formData, institucion: e.target.value })}
-              />
+              <Input id="institucion" {...register("institucion")} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="fecha_inicio">Fecha de Inicio</Label>
-              <Input
-                id="fecha_inicio"
-                type="date"
-                value={formData.fecha_inicio}
-                onChange={(e) => setFormData({ ...formData, fecha_inicio: e.target.value })}
-              />
+              <Input id="fecha_inicio" type="date" {...register("fecha_inicio")} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="fecha_fin">Fecha de Fin</Label>
-              <Input
-                id="fecha_fin"
-                type="date"
-                value={formData.fecha_fin}
-                onChange={(e) => setFormData({ ...formData, fecha_fin: e.target.value })}
-              />
+              <Input id="fecha_fin" type="date" {...register("fecha_fin")} />
             </div>
 
             <div className="col-span-2 space-y-2">
               <Label htmlFor="descripcion">Descripción</Label>
-              <Textarea
-                id="descripcion"
-                value={formData.descripcion}
-                onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-                rows={4}
-              />
+              <Textarea id="descripcion" {...register("descripcion")} rows={4} />
             </div>
           </div>
 

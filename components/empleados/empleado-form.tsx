@@ -39,8 +39,6 @@ export function EmpleadoForm({ empleado, sectores, supervisores }: EmpleadoFormP
     e.preventDefault()
     setLoading(true)
 
-    console.log("[v0] Guardando empleado:", formData)
-
     try {
       const dataToSave = {
         dni: formData.dni,
@@ -55,28 +53,19 @@ export function EmpleadoForm({ empleado, sectores, supervisores }: EmpleadoFormP
         activo: true,
       }
 
-      console.log("[v0] Datos a guardar:", dataToSave)
-
       if (empleado) {
         const { error } = await supabase.from("empleados").update(dataToSave).eq("dni", empleado.dni)
-        if (error) {
-          console.error("[v0] Error al actualizar:", error)
-          throw error
-        }
+        if (error) throw error
         toast({ title: "Empleado actualizado correctamente" })
       } else {
         const { error } = await supabase.from("empleados").insert([dataToSave])
-        if (error) {
-          console.error("[v0] Error al crear:", error)
-          throw error
-        }
+        if (error) throw error
         toast({ title: "Empleado creado correctamente" })
       }
 
       router.push("/dashboard/empleados")
       router.refresh()
     } catch (error: any) {
-      console.error("[v0] Error en submit:", error)
       toast({
         title: "Error",
         description: error.message || "Error al guardar el empleado",

@@ -6,7 +6,6 @@ import { Users, BarChart3, FileText, Shield } from "lucide-react"
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
-      {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <h1 className="text-xl font-bold text-blue-600">SysPersonal</h1>
@@ -16,7 +15,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 text-center">
         <h2 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl">Gestión Integral de Recursos Humanos</h2>
         <p className="mx-auto mb-8 max-w-2xl text-lg text-gray-600">
@@ -30,7 +28,6 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* Features */}
       <section className="container mx-auto px-4 py-16">
         <h3 className="mb-12 text-center text-3xl font-bold text-gray-900">Funcionalidades Principales</h3>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -100,7 +97,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="container mx-auto px-4 py-16 text-center">
         <Card className="mx-auto max-w-2xl border-blue-200 bg-blue-50">
           <CardHeader>
@@ -117,7 +113,6 @@ export default function Home() {
         </Card>
       </section>
 
-      {/* Footer */}
       <footer className="border-t bg-gray-50 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-gray-600">
           <p>SysPersonal - Sistema de Gestión de Personal</p>

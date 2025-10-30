@@ -89,7 +89,7 @@ export default async function DashboardPage() {
             <CardTitle>Accesos Rápidos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Link href="/dashboard/empleados/nuevo">
+            <Link href="/dashboard/empleados">
               <Button variant="outline" className="w-full justify-start bg-transparent">
                 Registrar Nuevo Empleado
               </Button>
@@ -99,7 +99,7 @@ export default async function DashboardPage() {
                 Marcar Asistencia
               </Button>
             </Link>
-            <Link href="/dashboard/capacitaciones/nuevo">
+            <Link href="/dashboard/capacitaciones">
               <Button variant="outline" className="w-full justify-start bg-transparent">
                 Crear Capacitación
               </Button>

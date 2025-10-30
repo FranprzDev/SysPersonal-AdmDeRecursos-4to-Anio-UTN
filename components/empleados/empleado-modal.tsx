@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
+import { useForm } from "react-hook-form"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,12 +9,25 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"
 
 interface EmpleadoModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   empleado?: any
   onSuccess: () => void
+}
+
+type EmpleadoFormData = {
+  dni: string
+  nombre: string
+  apellido: string
+  fecha_nacimiento: string
+  direccion: string
+  telefono: string
+  email: string
+  id_sector: string
+  dni_supervisor: string
 }
 
 export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: EmpleadoModalProps) {
@@ -25,21 +37,33 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
   const { toast } = useToast()
   const supabase = createClient()
 
-  const [formData, setFormData] = useState({
-    dni: "",
-    nombre: "",
-    apellido: "",
-    fecha_nacimiento: "",
-    direccion: "",
-    telefono: "",
-    email: "",
-    id_sector: "",
-    dni_supervisor: "",
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<EmpleadoFormData>({
+    defaultValues: {
+      dni: "",
+      nombre: "",
+      apellido: "",
+      fecha_nacimiento: "",
+      direccion: "",
+      telefono: "",
+      email: "",
+      id_sector: "",
+      dni_supervisor: "",
+    },
   })
+
+  const id_sector = watch("id_sector")
+  const dni_supervisor = watch("dni_supervisor")
 
   useEffect(() => {
     if (empleado) {
-      setFormData({
+      reset({
         dni: empleado.dni || "",
         nombre: empleado.nombre || "",
         apellido: empleado.apellido || "",
@@ -51,7 +75,7 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
         dni_supervisor: empleado.dni_supervisor || "",
       })
     } else {
-      setFormData({
+      reset({
         dni: "",
         nombre: "",
         apellido: "",
@@ -63,7 +87,7 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
         dni_supervisor: "",
       })
     }
-  }, [empleado, open])
+  }, [empleado, open, reset])
 
   useEffect(() => {
     if (open) {
@@ -83,25 +107,22 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
     setSupervisores(supervisoresData || [])
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: EmpleadoFormData) => {
     setLoading(true)
 
     try {
       const dataToSave = {
-        ...formData,
-        id_sector: formData.id_sector ? Number.parseInt(formData.id_sector) : null,
-        dni_supervisor: formData.dni_supervisor || null,
+        ...data,
+        id_sector: data.id_sector ? Number.parseInt(data.id_sector) : null,
+        dni_supervisor: data.dni_supervisor || null,
         activo: true,
       }
 
       if (empleado) {
-        // Editar
         const { error } = await supabase.from("empleados").update(dataToSave).eq("dni", empleado.dni)
         if (error) throw error
         toast({ title: "Empleado actualizado correctamente" })
       } else {
-        // Crear
         const { error } = await supabase.from("empleados").insert([dataToSave])
         if (error) throw error
         toast({ title: "Empleado creado correctamente" })
@@ -126,78 +147,58 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
         <DialogHeader>
           <DialogTitle>{empleado ? "Editar Empleado" : "Nuevo Empleado"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="dni">DNI *</Label>
-              <Input
-                id="dni"
-                value={formData.dni}
-                onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
-                required
-                disabled={!!empleado}
-              />
+              <Input id="dni" {...register("dni", { required: "El DNI es obligatorio" })} disabled={!!empleado} />
+              {errors.dni && <p className="text-sm text-red-500">{errors.dni.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
+                {...register("email", {
+                  required: "El email es obligatorio",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Email inválido",
+                  },
+                })}
               />
+              {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="nombre">Nombre *</Label>
-              <Input
-                id="nombre"
-                value={formData.nombre}
-                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                required
-              />
+              <Input id="nombre" {...register("nombre", { required: "El nombre es obligatorio" })} />
+              {errors.nombre && <p className="text-sm text-red-500">{errors.nombre.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="apellido">Apellido *</Label>
-              <Input
-                id="apellido"
-                value={formData.apellido}
-                onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
-                required
-              />
+              <Input id="apellido" {...register("apellido", { required: "El apellido es obligatorio" })} />
+              {errors.apellido && <p className="text-sm text-red-500">{errors.apellido.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="fecha_nacimiento">Fecha de Nacimiento *</Label>
               <Input
                 id="fecha_nacimiento"
                 type="date"
-                value={formData.fecha_nacimiento}
-                onChange={(e) => setFormData({ ...formData, fecha_nacimiento: e.target.value })}
-                required
+                {...register("fecha_nacimiento", { required: "La fecha de nacimiento es obligatoria" })}
               />
+              {errors.fecha_nacimiento && <p className="text-sm text-red-500">{errors.fecha_nacimiento.message}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="telefono">Teléfono</Label>
-              <Input
-                id="telefono"
-                value={formData.telefono}
-                onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-              />
+              <Input id="telefono" {...register("telefono")} />
             </div>
             <div className="col-span-2 space-y-2">
               <Label htmlFor="direccion">Dirección</Label>
-              <Input
-                id="direccion"
-                value={formData.direccion}
-                onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-              />
+              <Input id="direccion" {...register("direccion")} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="id_sector">Sector</Label>
-              <Select
-                value={formData.id_sector}
-                onValueChange={(value) => setFormData({ ...formData, id_sector: value })}
-              >
+              <Select value={id_sector} onValueChange={(value) => setValue("id_sector", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar sector" />
                 </SelectTrigger>
@@ -212,10 +213,7 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
             </div>
             <div className="space-y-2">
               <Label htmlFor="dni_supervisor">Supervisor</Label>
-              <Select
-                value={formData.dni_supervisor}
-                onValueChange={(value) => setFormData({ ...formData, dni_supervisor: value })}
-              >
+              <Select value={dni_supervisor} onValueChange={(value) => setValue("dni_supervisor", value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar supervisor" />
                 </SelectTrigger>

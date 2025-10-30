@@ -11,16 +11,15 @@ export default function SectoresPage() {
   const [sectores, setSectores] = useState<any[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedSector, setSelectedSector] = useState<any>(null)
+
   const supabase = createClient()
 
   const fetchSectores = async () => {
     const { data } = await supabase
       .from("sectores")
-      .select(`
-        *,
-        supervisor:empleados(nombre, apellido)
-      `)
-      .order("nombre_sector")
+      .select("*")
+      .eq("activo", true)
+      .order("nombre_sector", { ascending: true })
 
     if (data) setSectores(data)
   }

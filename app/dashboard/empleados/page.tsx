@@ -6,12 +6,19 @@ export default async function EmpleadosPage() {
 
   const { data: empleados } = await supabase
     .from("empleados")
-    .select(`
-      *,
-      sector:sectores(nombre_sector),
-      supervisor:empleados!empleados_dni_supervisor_fkey(nombre, apellido)
-    `)
+    .select("*")
+    .eq("activo", true)
     .order("apellido", { ascending: true })
+
+  const { data: sectores } = await supabase.from("sectores").select("id_sector, nombre_sector")
+
+  const { data: supervisores } = await supabase.from("empleados").select("dni, nombre, apellido")
+
+  const empleadosConRelaciones = empleados?.map((emp) => ({
+    ...emp,
+    sector: sectores?.find((s) => s.id_sector === emp.id_sector),
+    supervisor: supervisores?.find((s) => s.dni === emp.dni_supervisor),
+  }))
 
   return (
     <div className="space-y-6">
@@ -22,7 +29,7 @@ export default async function EmpleadosPage() {
         </div>
       </div>
 
-      <EmpleadosTable empleados={empleados || []} />
+      <EmpleadosTable empleados={empleadosConRelaciones || []} />
     </div>
   )
 }

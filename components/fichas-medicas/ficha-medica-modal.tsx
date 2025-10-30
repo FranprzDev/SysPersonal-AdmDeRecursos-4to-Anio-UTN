@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
 import { createClient } from "@/lib/supabase/client"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,17 @@ interface FichaMedicaModalProps {
   ficha?: any
 }
 
+type FichaMedicaFormData = {
+  dni_empleado: string
+  grupo_sanguineo: string
+  alergias: string
+  enfermedades_preexistentes: string
+  aptitud_medica: string
+  fecha_control: string
+  observaciones: string
+  documento_adjunto: string
+}
+
 export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalProps) {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -25,22 +37,35 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
   const { toast } = useToast()
   const supabase = createClient()
 
-  const [formData, setFormData] = useState({
-    dni_empleado: "",
-    grupo_sanguineo: "",
-    alergias: "",
-    enfermedades_preexistentes: "",
-    aptitud_medica: "Apto",
-    fecha_control: "",
-    observaciones: "",
-    documento_adjunto: "",
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FichaMedicaFormData>({
+    defaultValues: {
+      dni_empleado: "",
+      grupo_sanguineo: "",
+      alergias: "",
+      enfermedades_preexistentes: "",
+      aptitud_medica: "Apto",
+      fecha_control: "",
+      observaciones: "",
+      documento_adjunto: "",
+    },
   })
+
+  const dni_empleado = watch("dni_empleado")
+  const aptitud_medica = watch("aptitud_medica")
+  const documento_adjunto = watch("documento_adjunto")
 
   useEffect(() => {
     if (isOpen) {
       loadEmpleados()
       if (ficha) {
-        setFormData({
+        reset({
           dni_empleado: ficha.dni_empleado || "",
           grupo_sanguineo: ficha.grupo_sanguineo || "",
           alergias: ficha.alergias || "",
@@ -51,7 +76,7 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
           documento_adjunto: ficha.documento_adjunto || "",
         })
       } else {
-        setFormData({
+        reset({
           dni_empleado: "",
           grupo_sanguineo: "",
           alergias: "",
@@ -63,7 +88,7 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
         })
       }
     }
-  }, [isOpen, ficha])
+  }, [isOpen, ficha, reset])
 
   const loadEmpleados = async () => {
     const { data } = await supabase
@@ -93,7 +118,7 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
         data: { publicUrl },
       } = supabase.storage.from("documentos").getPublicUrl(filePath)
 
-      setFormData({ ...formData, documento_adjunto: publicUrl })
+      setValue("documento_adjunto", publicUrl)
       toast({ title: "Archivo subido correctamente" })
     } catch (error: any) {
       toast({
@@ -106,19 +131,16 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const onSubmit = async (data: FichaMedicaFormData) => {
     setLoading(true)
 
     try {
       if (ficha) {
-        const { error } = await supabase.from("fichas_medicas").update(formData).eq("id_ficha", ficha.id_ficha)
-
+        const { error } = await supabase.from("fichas_medicas").update(data).eq("id_ficha", ficha.id_ficha)
         if (error) throw error
         toast({ title: "Ficha médica actualizada correctamente" })
       } else {
-        const { error } = await supabase.from("fichas_medicas").insert([formData])
-
+        const { error } = await supabase.from("fichas_medicas").insert([data])
         if (error) throw error
         toast({ title: "Ficha médica creada correctamente" })
       }
@@ -142,14 +164,10 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
           <DialogTitle>{ficha ? "Editar" : "Nueva"} Ficha Médica</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="dni_empleado">Empleado *</Label>
-            <Select
-              value={formData.dni_empleado}
-              onValueChange={(value) => setFormData({ ...formData, dni_empleado: value })}
-              disabled={!!ficha}
-            >
+            <Select value={dni_empleado} onValueChange={(value) => setValue("dni_empleado", value)} disabled={!!ficha}>
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar empleado" />
               </SelectTrigger>
@@ -161,25 +179,18 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
                 ))}
               </SelectContent>
             </Select>
+            {errors.dni_empleado && <p className="text-sm text-red-500">{errors.dni_empleado.message}</p>}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="grupo_sanguineo">Grupo Sanguíneo</Label>
-              <Input
-                id="grupo_sanguineo"
-                value={formData.grupo_sanguineo}
-                onChange={(e) => setFormData({ ...formData, grupo_sanguineo: e.target.value })}
-                placeholder="Ej: O+"
-              />
+              <Input id="grupo_sanguineo" {...register("grupo_sanguineo")} placeholder="Ej: O+" />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="aptitud_medica">Aptitud Médica *</Label>
-              <Select
-                value={formData.aptitud_medica}
-                onValueChange={(value) => setFormData({ ...formData, aptitud_medica: value })}
-              >
+              <Select value={aptitud_medica} onValueChange={(value) => setValue("aptitud_medica", value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -192,49 +203,29 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
 
             <div className="space-y-2">
               <Label htmlFor="fecha_control">Fecha de Control</Label>
-              <Input
-                id="fecha_control"
-                type="date"
-                value={formData.fecha_control}
-                onChange={(e) => setFormData({ ...formData, fecha_control: e.target.value })}
-              />
+              <Input id="fecha_control" type="date" {...register("fecha_control")} />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="alergias">Alergias</Label>
-            <Textarea
-              id="alergias"
-              value={formData.alergias}
-              onChange={(e) => setFormData({ ...formData, alergias: e.target.value })}
-              rows={2}
-            />
+            <Textarea id="alergias" {...register("alergias")} rows={2} />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="enfermedades_preexistentes">Enfermedades Preexistentes</Label>
-            <Textarea
-              id="enfermedades_preexistentes"
-              value={formData.enfermedades_preexistentes}
-              onChange={(e) => setFormData({ ...formData, enfermedades_preexistentes: e.target.value })}
-              rows={2}
-            />
+            <Textarea id="enfermedades_preexistentes" {...register("enfermedades_preexistentes")} rows={2} />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="observaciones">Observaciones</Label>
-            <Textarea
-              id="observaciones"
-              value={formData.observaciones}
-              onChange={(e) => setFormData({ ...formData, observaciones: e.target.value })}
-              rows={2}
-            />
+            <Textarea id="observaciones" {...register("observaciones")} rows={2} />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="documento">Documento Adjunto</Label>
             <Input id="documento" type="file" onChange={handleFileUpload} disabled={uploading} />
-            {formData.documento_adjunto && <p className="text-sm text-green-600">Archivo adjunto guardado</p>}
+            {documento_adjunto && <p className="text-sm text-green-600">Archivo adjunto guardado</p>}
           </div>
 
           <div className="flex gap-4 justify-end">

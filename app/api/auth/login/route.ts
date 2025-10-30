@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
-import { cookies } from "next/headers"
+import { createApiClient } from "@/lib/supabase/api"
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,7 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email y contraseña son requeridos" }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    const supabase = createApiClient()
 
     const { data: user, error } = await supabase
       .from("usuarios")
@@ -20,24 +19,31 @@ export async function POST(request: NextRequest) {
       .eq("activo", true)
       .maybeSingle()
 
-    if (error || !user) {
+    if (error) {
+      return NextResponse.json({ error: "Error al consultar la base de datos" }, { status: 500 })
+    }
+
+    if (!user) {
       return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 })
     }
 
     const response = NextResponse.json({ success: true, user })
 
-    const cookieStore = await cookies()
-    cookieStore.set("user_session", JSON.stringify(user), {
+    response.cookies.set("user_session", JSON.stringify(user), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 24 * 7, // 7 días
       path: "/",
     })
 
     return response
-  } catch (error) {
-    console.error("[v0] Error en login:", error)
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        error: error.message || "Error interno del servidor",
+      },
+      { status: 500 },
+    )
   }
 }
