@@ -1,31 +1,34 @@
 "use client"
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
 interface EmpleadosPorSectorChartProps {
   data: { sector: string; empleados: number }[]
 }
 
+const COLORS = ["#2563eb", "#7c3aed", "#dc2626", "#059669", "#ea580c", "#0891b2", "#be185d", "#9333ea"]
+
 export function EmpleadosPorSectorChart({ data }: EmpleadosPorSectorChartProps) {
   return (
     <ResponsiveContainer width="100%" height={400}>
-      <BarChart 
-        data={data}
-        margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis 
-          dataKey="sector" 
-          angle={-45} 
-          textAnchor="end" 
-          height={120}
-          interval={0}
-          tick={{ fontSize: 12 }}
-        />
-        <YAxis />
+      <PieChart>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          labelLine={false}
+          label={({ sector, empleados }) => `${sector}: ${empleados}`}
+          outerRadius={120}
+          fill="#8884d8"
+          dataKey="empleados"
+        >
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          ))}
+        </Pie>
         <Tooltip />
-        <Bar dataKey="empleados" fill="#2563eb" radius={[4, 4, 0, 0]} />
-      </BarChart>
+        <Legend />
+      </PieChart>
     </ResponsiveContainer>
   )
 }
