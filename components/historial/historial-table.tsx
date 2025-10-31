@@ -19,7 +19,6 @@ export function HistorialTable({ data, tipo }: HistorialTableProps) {
             <TableHead>Campo Modificado</TableHead>
             <TableHead>Valor Anterior</TableHead>
             <TableHead>Valor Nuevo</TableHead>
-            <TableHead>Usuario</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -38,7 +37,6 @@ export function HistorialTable({ data, tipo }: HistorialTableProps) {
               </TableCell>
               <TableCell className="text-red-600">{item.valor_anterior || "-"}</TableCell>
               <TableCell className="text-green-600">{item.valor_nuevo || "-"}</TableCell>
-              <TableCell>{item.usuario_modificador}</TableCell>
             </TableRow>
           ))}
         </TableBody>
