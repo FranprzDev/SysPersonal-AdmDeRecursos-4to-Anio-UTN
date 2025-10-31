@@ -8,6 +8,12 @@ export default async function AsistenciaPage() {
 
   const hoy = new Date().toISOString().split("T")[0]
 
+  const { data: empleados } = await supabase
+    .from("empleados")
+    .select("dni, nombre, apellido")
+    .eq("activo", true)
+    .order("apellido")
+
   const { data: asistenciasHoy } = await supabase
     .from("asistencias")
     .select(`
@@ -15,13 +21,18 @@ export default async function AsistenciaPage() {
       empleado:empleados(nombre, apellido, dni)
     `)
     .eq("fecha", hoy)
-    .order("hora_ingreso", { ascending: false })
 
-  const { data: empleados } = await supabase
-    .from("empleados")
-    .select("dni, nombre, apellido")
-    .eq("activo", true)
-    .order("apellido")
+  const asistenciasMap = new Map(
+    (asistenciasHoy || []).map((asistencia) => [asistencia.dni_empleado, asistencia])
+  )
+
+  const empleadosConAsistencia = (empleados || []).map((empleado) => {
+    const asistencia = asistenciasMap.get(empleado.dni)
+    return {
+      ...empleado,
+      asistencia: asistencia || null,
+    }
+  })
 
   return (
     <div className="space-y-6">
@@ -44,7 +55,7 @@ export default async function AsistenciaPage() {
           <CardTitle>Asistencias de Hoy</CardTitle>
         </CardHeader>
         <CardContent>
-          <AsistenciaTable asistencias={asistenciasHoy || []} />
+          <AsistenciaTable empleadosConAsistencia={empleadosConAsistencia} />
         </CardContent>
       </Card>
     </div>

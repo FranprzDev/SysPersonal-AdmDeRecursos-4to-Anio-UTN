@@ -4,7 +4,20 @@ import { useState, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 
-export function AsistenciaTable({ asistencias }: { asistencias: any[] }) {
+interface EmpleadoConAsistencia {
+  dni: string
+  nombre: string
+  apellido: string
+  asistencia: {
+    id_asistencia: number
+    dni_empleado: string
+    fecha: string
+    hora_ingreso: string | null
+    hora_salida: string | null
+  } | null
+}
+
+export function AsistenciaTable({ empleadosConAsistencia }: { empleadosConAsistencia: EmpleadoConAsistencia[] }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -39,30 +52,39 @@ export function AsistenciaTable({ asistencias }: { asistencias: any[] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {asistencias.length === 0 ? (
+          {empleadosConAsistencia.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center text-gray-500">
-                No hay registros de asistencia para hoy
+                No hay empleados activos
               </TableCell>
             </TableRow>
           ) : (
-            asistencias.map((asistencia) => (
-              <TableRow key={asistencia.id_asistencia}>
-                <TableCell>
-                  {asistencia.empleado
-                    ? `${asistencia.empleado.nombre} ${asistencia.empleado.apellido}`
-                    : asistencia.dni_empleado}
-                </TableCell>
-                <TableCell>{asistencia.dni_empleado}</TableCell>
-                <TableCell>{formatTime(asistencia.hora_ingreso)}</TableCell>
-                <TableCell>{formatTime(asistencia.hora_salida)}</TableCell>
-                <TableCell>
-                  <Badge variant={asistencia.hora_salida ? "default" : "secondary"}>
-                    {asistencia.hora_salida ? "Completo" : "En curso"}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))
+            empleadosConAsistencia.map((empleado) => {
+              const asistencia = empleado.asistencia
+              const tieneAsistencia = asistencia !== null
+              const tieneIngreso = asistencia?.hora_ingreso !== null
+              const tieneSalida = asistencia?.hora_salida !== null
+
+              return (
+                <TableRow key={empleado.dni}>
+                  <TableCell>
+                    {empleado.nombre} {empleado.apellido}
+                  </TableCell>
+                  <TableCell>{empleado.dni}</TableCell>
+                  <TableCell>{formatTime(asistencia?.hora_ingreso || null)}</TableCell>
+                  <TableCell>{formatTime(asistencia?.hora_salida || null)}</TableCell>
+                  <TableCell>
+                    {tieneAsistencia ? (
+                      <Badge variant={tieneSalida ? "default" : "secondary"}>
+                        {tieneSalida ? "Completo" : "En curso"}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">Sin registrar</Badge>
+                    )}
+                  </TableCell>
+                </TableRow>
+              )
+            })
           )}
         </TableBody>
       </Table>
