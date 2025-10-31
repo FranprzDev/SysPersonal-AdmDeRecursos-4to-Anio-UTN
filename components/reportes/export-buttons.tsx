@@ -121,17 +121,9 @@ export function ExportButtons({ tipo }: ExportButtonsProps) {
       XLSX.utils.book_append_sheet(workbook, worksheet, tipo)
 
       XLSX.writeFile(workbook, filename)
-      toast({
-        title: "Exportación exitosa",
-        description: `Se ha exportado ${data.length} registros`,
-      })
+      toast.success(`Exportación exitosa: Se ha exportado ${data.length} registros`)
     } catch (error: any) {
-
-      toast({
-        title: "Error al exportar",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(`Error al exportar: ${error.message}`)
     } finally {
       setLoading(false)
     }

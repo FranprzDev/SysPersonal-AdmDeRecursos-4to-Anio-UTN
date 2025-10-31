@@ -4,7 +4,7 @@ import { cookies } from "next/headers"
 export interface User {
   id_usuario: number
   email: string
-  rol_sistema: "admin" | "rrhh" | "supervisor"
+  rol_sistema: "admin" | "rrhh" | "supervisor" | "empleado"
   dni_empleado: string | null
 }
 

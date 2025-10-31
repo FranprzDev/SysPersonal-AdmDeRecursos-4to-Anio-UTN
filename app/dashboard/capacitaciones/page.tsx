@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { CapacitacionModal } from "@/components/capacitaciones/capacitacion-modal"
 import { AsignarCapacitacion } from "@/components/capacitaciones/asignar-capacitacion"
+import { getPermisosPorRol } from "@/lib/permissions"
+import type { RolSistema } from "@/lib/permissions"
 
 export default function CapacitacionesPage() {
   const [capacitaciones, setCapacitaciones] = useState<any[]>([])
@@ -14,7 +16,23 @@ export default function CapacitacionesPage() {
   const [asignarModalOpen, setAsignarModalOpen] = useState<boolean>(false)
   const [selectedCapacitacion, setSelectedCapacitacion] = useState<any>(null)
   const [selectedCapacitacionAsignar, setSelectedCapacitacionAsignar] = useState<any>(null)
+  const [rol, setRol] = useState<RolSistema>("admin")
   const supabase = createClient()
+
+  useEffect(() => {
+    const getUserSession = async () => {
+      const response = await fetch("/api/auth/session")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.user) {
+          setRol(data.user.rol_sistema)
+        }
+      }
+    }
+    getUserSession()
+  }, [])
+
+  const permisos = getPermisosPorRol(rol)
 
   const loadCapacitaciones = async () => {
     const { data } = await supabase.from("capacitaciones").select("*").order("fecha_inicio", { ascending: false })
@@ -47,10 +65,12 @@ export default function CapacitacionesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Capacitaciones</h1>
           <p className="text-gray-500">Gestión de capacitaciones del personal</p>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva Capacitación
-        </Button>
+        {permisos.capacitaciones.crear && (
+          <Button onClick={handleNew}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva Capacitación
+          </Button>
+        )}
       </div>
 
       <CapacitacionesTable
@@ -58,22 +78,27 @@ export default function CapacitacionesPage() {
         onEdit={handleEdit}
         onDelete={loadCapacitaciones}
         onAsignar={handleAsignar}
+        permisos={permisos.capacitaciones}
       />
 
-      <CapacitacionModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        capacitacion={selectedCapacitacion}
-        onSuccess={loadCapacitaciones}
-      />
+      {permisos.capacitaciones.crear && (
+        <>
+          <CapacitacionModal
+            open={modalOpen}
+            onOpenChange={setModalOpen}
+            capacitacion={selectedCapacitacion}
+            onSuccess={loadCapacitaciones}
+          />
 
-      {selectedCapacitacionAsignar && (
-        <AsignarCapacitacion
-          capacitacionId={selectedCapacitacionAsignar.id_capacitacion}
-          open={asignarModalOpen}
-          onOpenChange={setAsignarModalOpen}
-          onSuccess={loadCapacitaciones}
-        />
+          {selectedCapacitacionAsignar && (
+            <AsignarCapacitacion
+              capacitacionId={selectedCapacitacionAsignar.id_capacitacion}
+              open={asignarModalOpen}
+              onOpenChange={setAsignarModalOpen}
+              onSuccess={loadCapacitaciones}
+            />
+          )}
+        </>
       )}
     </div>
   )

@@ -23,8 +23,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { EmpleadoModal } from "./empleado-modal"
+import type { Permisos } from "@/lib/permissions"
 
-export function EmpleadosTable({ empleados }: { empleados: any[] }) {
+export function EmpleadosTable({ empleados, permisos }: { empleados: any[], permisos: Permisos["empleados"] }) {
   const [searchTerm, setSearchTerm] = useState("")
   const [sectorFilter, setSectorFilter] = useState("all")
   const [estadoFilter, setEstadoFilter] = useState("all")
@@ -113,10 +114,12 @@ export function EmpleadosTable({ empleados }: { empleados: any[] }) {
             <SelectItem value="inactivo">Inactivos</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nuevo Empleado
-        </Button>
+        {permisos.crear && (
+          <Button onClick={handleNew}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nuevo Empleado
+          </Button>
+        )}
       </div>
 
       <div className="rounded-lg border bg-white">
@@ -129,7 +132,9 @@ export function EmpleadosTable({ empleados }: { empleados: any[] }) {
               <TableHead>Teléfono</TableHead>
               <TableHead>Sector</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
+              {(permisos.editar || permisos.eliminar) && (
+                <TableHead className="text-right">Acciones</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -152,62 +157,72 @@ export function EmpleadosTable({ empleados }: { empleados: any[] }) {
                     {empleado.activo ? "Activo" : "Inactivo"}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Link href={`/dashboard/empleados/${encodeURIComponent(empleado.dni)}`}>
-                      <Button variant="ghost" size="icon" title="Ver perfil">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleEdit(empleado)
-                      }}
-                      title="Editar"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                {(permisos.ver || permisos.editar || permisos.eliminar) && (
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      {permisos.ver && (
+                        <Link href={`/dashboard/empleados/${encodeURIComponent(empleado.dni)}`}>
+                          <Button variant="ghost" size="icon" title="Ver perfil">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      )}
+                      {permisos.editar && (
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={(e) => e.stopPropagation()}
-                          title="Dar de baja"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEdit(empleado)
+                          }}
+                          title="Editar"
                         >
-                          <Trash2 className="h-4 w-4 text-red-600" />
+                          <Edit className="h-4 w-4" />
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmar baja</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            ¿Está seguro que desea dar de baja a este empleado? Esta acción se puede revertir.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(empleado.dni)}>Confirmar</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
+                      )}
+                      {permisos.eliminar && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => e.stopPropagation()}
+                              title="Dar de baja"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar baja</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                ¿Está seguro que desea dar de baja a este empleado? Esta acción se puede revertir.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(empleado.dni)}>Confirmar</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
 
-      <EmpleadoModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        empleado={selectedEmpleado}
-        onSuccess={handleSuccess}
-      />
+      {permisos.crear && (
+        <EmpleadoModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          empleado={selectedEmpleado}
+          onSuccess={handleSuccess}
+        />
+      )}
     </div>
   )
 }

@@ -16,15 +16,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import type { Permisos } from "@/lib/permissions"
 
 interface SectoresTableProps {
   sectores: any[]
   onEdit: (sector: any) => void
   onDelete: () => void
+  permisos: Permisos["sectores"]
 }
 
-export function SectoresTable({ sectores, onEdit, onDelete }: SectoresTableProps) {
-  
+export function SectoresTable({ sectores, onEdit, onDelete, permisos }: SectoresTableProps) {
   const supabase = createClient()
 
   const handleDelete = async (id: number) => {
@@ -56,13 +57,15 @@ export function SectoresTable({ sectores, onEdit, onDelete }: SectoresTableProps
             <TableHead>Nombre</TableHead>
             <TableHead>Descripción</TableHead>
             <TableHead>Supervisor</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
+            {(permisos.editar || permisos.eliminar) && (
+              <TableHead className="text-right">Acciones</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {sectores.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-gray-500 py-8">
+              <TableCell colSpan={permisos.editar || permisos.eliminar ? 4 : 3} className="text-center text-gray-500 py-8">
                 No hay sectores registrados
               </TableCell>
             </TableRow>
@@ -74,34 +77,40 @@ export function SectoresTable({ sectores, onEdit, onDelete }: SectoresTableProps
                 <TableCell>
                   {sector.supervisor ? `${sector.supervisor.nombre} ${sector.supervisor.apellido}` : sector.dni_supervisor || "-"}
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(sector)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4 text-red-600" />
+                {(permisos.editar || permisos.eliminar) && (
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      {permisos.editar && (
+                        <Button variant="ghost" size="icon" onClick={() => onEdit(sector)}>
+                          <Edit className="h-4 w-4" />
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            ¿Está seguro que desea eliminar este sector? Esta acción no se puede deshacer.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(sector.id_sector)}>
-                            Confirmar
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
+                      )}
+                      {permisos.eliminar && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                ¿Está seguro que desea eliminar este sector? Esta acción no se puede deshacer.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(sector.id_sector)}>
+                                Confirmar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}

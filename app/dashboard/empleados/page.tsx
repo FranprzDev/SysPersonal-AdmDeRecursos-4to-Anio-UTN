@@ -1,8 +1,17 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { EmpleadosTable } from "@/components/empleados/empleados-table"
+import { getSession } from "@/lib/auth"
+import { getPermisosPorRol } from "@/lib/permissions"
 
 export default async function EmpleadosPage() {
   const supabase = await createServerSupabaseClient()
+  const user = await getSession()
+
+  if (!user) {
+    return null
+  }
+
+  const permisos = getPermisosPorRol(user.rol_sistema)
 
   const { data: empleados } = await supabase
     .from("empleados")
@@ -28,7 +37,7 @@ export default async function EmpleadosPage() {
         </div>
       </div>
 
-      <EmpleadosTable empleados={empleadosConRelaciones || []} />
+      <EmpleadosTable empleados={empleadosConRelaciones || []} permisos={permisos.empleados} />
     </div>
   )
 }

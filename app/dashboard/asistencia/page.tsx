@@ -2,9 +2,18 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { RegistroAsistencia } from "@/components/asistencia/registro-asistencia"
 import { AsistenciaTable } from "@/components/asistencia/asistencia-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { getSession } from "@/lib/auth"
+import { getPermisosPorRol } from "@/lib/permissions"
 
 export default async function AsistenciaPage() {
   const supabase = await createServerSupabaseClient()
+  const user = await getSession()
+
+  if (!user) {
+    return null
+  }
+
+  const permisos = getPermisosPorRol(user.rol_sistema)
 
   const hoy = new Date().toISOString().split("T")[0]
 
@@ -41,23 +50,27 @@ export default async function AsistenciaPage() {
         <p className="text-gray-500">Control de ingreso y salida del personal</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Marcar Asistencia</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <RegistroAsistencia empleados={empleados || []} />
-        </CardContent>
-      </Card>
+      {permisos.asistencia.crear && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Marcar Asistencia</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RegistroAsistencia empleados={empleados || []} />
+          </CardContent>
+        </Card>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Asistencias de Hoy</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AsistenciaTable empleadosConAsistencia={empleadosConAsistencia} />
-        </CardContent>
-      </Card>
+      {permisos.asistencia.ver && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Asistencias de Hoy</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AsistenciaTable empleadosConAsistencia={empleadosConAsistencia} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

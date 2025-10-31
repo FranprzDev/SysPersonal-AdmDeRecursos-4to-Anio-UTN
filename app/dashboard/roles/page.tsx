@@ -6,12 +6,30 @@ import { RolesTable } from "@/components/roles/roles-table"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { RolModal } from "@/components/roles/rol-modal"
+import { getPermisosPorRol } from "@/lib/permissions"
+import type { RolSistema } from "@/lib/permissions"
 
 export default function RolesPage() {
   const [roles, setRoles] = useState<any[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedRol, setSelectedRol] = useState<any>(null)
+  const [rol, setRol] = useState<RolSistema>("admin")
   const supabase = createClient()
+
+  useEffect(() => {
+    const getUserSession = async () => {
+      const response = await fetch("/api/auth/session")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.user) {
+          setRol(data.user.rol_sistema)
+        }
+      }
+    }
+    getUserSession()
+  }, [])
+
+  const permisos = getPermisosPorRol(rol)
 
   const loadRoles = async () => {
     const { data } = await supabase.from("roles").select("*").order("nombre_rol")
@@ -39,15 +57,19 @@ export default function RolesPage() {
           <h1 className="text-3xl font-bold text-gray-900">Roles</h1>
           <p className="text-gray-500">Gestión de roles del sistema</p>
         </div>
-        <Button onClick={handleNew}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nuevo Rol
-        </Button>
+        {permisos.roles.crear && (
+          <Button onClick={handleNew}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nuevo Rol
+          </Button>
+        )}
       </div>
 
-      <RolesTable roles={roles} onEdit={handleEdit} onDelete={loadRoles} />
+      <RolesTable roles={roles} onEdit={handleEdit} onDelete={loadRoles} permisos={permisos.roles} />
 
-      <RolModal open={modalOpen} onOpenChange={setModalOpen} rol={selectedRol} onSuccess={loadRoles} />
+      {permisos.roles.crear && (
+        <RolModal open={modalOpen} onOpenChange={setModalOpen} rol={selectedRol} onSuccess={loadRoles} />
+      )}
     </div>
   )
 }
