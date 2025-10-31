@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
   id_usuario SERIAL PRIMARY KEY,
   email VARCHAR(100) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
-  rol_sistema VARCHAR(20) NOT NULL CHECK (rol_sistema IN ('admin', 'rrhh', 'supervisor')),
+  rol_sistema VARCHAR(20) NOT NULL CHECK (rol_sistema IN ('admin', 'rrhh', 'supervisor', 'empleado')),
   dni_empleado VARCHAR(20),
   activo BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

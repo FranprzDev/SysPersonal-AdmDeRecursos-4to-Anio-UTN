@@ -58,8 +58,19 @@ export function EmpleadoForm({ empleado, sectores, supervisores }: EmpleadoFormP
         if (error) throw error
         toast.success("Empleado actualizado correctamente")
       } else {
-        const { error } = await supabase.from("empleados").insert([dataToSave])
-        if (error) throw error
+        const response = await fetch("/api/empleados/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataToSave),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || "Error al crear el empleado")
+        }
+
         toast.success("Empleado creado correctamente")
       }
 

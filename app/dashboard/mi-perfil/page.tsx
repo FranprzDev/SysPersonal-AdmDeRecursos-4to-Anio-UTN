@@ -1,29 +1,26 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Building2, Users, GraduationCap, Award, Clock } from "lucide-react"
-import Link from "next/link"
-import { notFound, redirect } from "next/navigation"
+import { Mail, Phone, MapPin, Calendar, Building2, Users, GraduationCap, Award, Clock } from "lucide-react"
 import { getSession } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
-export default async function EmpleadoProfilePage({ params }: { params: { id: string } }) {
+export default async function MiPerfilPage() {
   const supabase = await createServerSupabaseClient()
   const user = await getSession()
-  const dni = decodeURIComponent(params.id)
 
-  if (user?.rol_sistema === "empleado" && user.dni_empleado !== dni) {
-    redirect("/dashboard/mi-perfil")
+  if (!user || user.rol_sistema !== "empleado" || !user.dni_empleado) {
+    redirect("/dashboard")
   }
 
   const { data: empleado } = await supabase
     .from("empleados")
     .select("*")
-    .eq("dni", dni)
+    .eq("dni", user.dni_empleado)
     .single()
 
   if (!empleado) {
-    notFound()
+    redirect("/dashboard")
   }
 
   const { data: sector } = await supabase
@@ -46,7 +43,7 @@ export default async function EmpleadoProfilePage({ params }: { params: { id: st
       capacitacion:capacitaciones(*)
     `
     )
-    .eq("dni_empleado", dni)
+    .eq("dni_empleado", user.dni_empleado)
 
   const { data: roles } = await supabase
     .from("empleado_rol")
@@ -56,18 +53,18 @@ export default async function EmpleadoProfilePage({ params }: { params: { id: st
       rol:roles(*)
     `
     )
-    .eq("dni_empleado", dni)
+    .eq("dni_empleado", user.dni_empleado)
 
   const { data: asistencias } = await supabase
     .from("asistencias")
     .select("*")
-    .eq("dni_empleado", dni)
+    .eq("dni_empleado", user.dni_empleado)
     .order("fecha", { ascending: false })
 
   const { count: totalAsistencias } = await supabase
     .from("asistencias")
     .select("*", { count: "exact", head: true })
-    .eq("dni_empleado", dni)
+    .eq("dni_empleado", user.dni_empleado)
 
   const hoy = new Date()
   const mesActual = hoy.getMonth()
@@ -77,13 +74,13 @@ export default async function EmpleadoProfilePage({ params }: { params: { id: st
   const { count: asistenciasMes } = await supabase
     .from("asistencias")
     .select("*", { count: "exact", head: true })
-    .eq("dni_empleado", dni)
+    .eq("dni_empleado", user.dni_empleado)
     .gte("fecha", inicioMes)
 
   const { count: asistenciasUltimos30Dias } = await supabase
     .from("asistencias")
     .select("*", { count: "exact", head: true })
-    .eq("dni_empleado", dni)
+    .eq("dni_empleado", user.dni_empleado)
     .gte("fecha", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0])
 
   const fechaNacimiento = empleado.fecha_nacimiento
@@ -95,18 +92,11 @@ export default async function EmpleadoProfilePage({ params }: { params: { id: st
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/empleados">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {empleado.nombre} {empleado.apellido}
-          </h1>
-          <p className="text-gray-500">Perfil del empleado</p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">
+          {empleado.nombre} {empleado.apellido}
+        </h1>
+        <p className="text-gray-500">Mi Perfil</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -364,3 +354,4 @@ export default async function EmpleadoProfilePage({ params }: { params: { id: st
     </div>
   )
 }
+

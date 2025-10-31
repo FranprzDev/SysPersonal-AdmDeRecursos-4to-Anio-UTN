@@ -14,40 +14,85 @@ export default async function AsistenciaPage() {
   }
 
   const permisos = getPermisosPorRol(user.rol_sistema)
-
+  const esEmpleado = user.rol_sistema === "empleado"
   const hoy = new Date().toISOString().split("T")[0]
 
-  const { data: empleados } = await supabase
-    .from("empleados")
-    .select("dni, nombre, apellido")
-    .eq("activo", true)
-    .order("apellido")
+  let empleados: any[] = []
+  let asistenciasHoy: any[] = []
+  let empleadosConAsistencia: any[] = []
 
-  const { data: asistenciasHoy } = await supabase
-    .from("asistencias")
-    .select(`
-      *,
-      empleado:empleados(nombre, apellido, dni)
-    `)
-    .eq("fecha", hoy)
+  if (esEmpleado && user.dni_empleado) {
+    const { data: empleado } = await supabase
+      .from("empleados")
+      .select("dni, nombre, apellido")
+      .eq("dni", user.dni_empleado)
+      .eq("activo", true)
+      .single()
 
-  const asistenciasMap = new Map(
-    (asistenciasHoy || []).map((asistencia) => [asistencia.dni_empleado, asistencia])
-  )
-
-  const empleadosConAsistencia = (empleados || []).map((empleado) => {
-    const asistencia = asistenciasMap.get(empleado.dni)
-    return {
-      ...empleado,
-      asistencia: asistencia || null,
+    if (empleado) {
+      empleados = [empleado]
     }
-  })
+
+    const { data: asistenciaHoy } = await supabase
+      .from("asistencias")
+      .select(`
+        *,
+        empleado:empleados(nombre, apellido, dni)
+      `)
+      .eq("fecha", hoy)
+      .eq("dni_empleado", user.dni_empleado)
+      .maybeSingle()
+
+    if (asistenciaHoy && empleado) {
+      empleadosConAsistencia = [{
+        ...empleado,
+        asistencia: asistenciaHoy,
+      }]
+    } else if (empleado) {
+      empleadosConAsistencia = [{
+        ...empleado,
+        asistencia: null,
+      }]
+    }
+  } else {
+    const { data: empleadosData } = await supabase
+      .from("empleados")
+      .select("dni, nombre, apellido")
+      .eq("activo", true)
+      .order("apellido")
+
+    empleados = empleadosData || []
+
+    const { data: asistenciasHoyData } = await supabase
+      .from("asistencias")
+      .select(`
+        *,
+        empleado:empleados(nombre, apellido, dni)
+      `)
+      .eq("fecha", hoy)
+
+    asistenciasHoy = asistenciasHoyData || []
+
+    const asistenciasMap = new Map(
+      asistenciasHoy.map((asistencia) => [asistencia.dni_empleado, asistencia])
+    )
+
+    empleadosConAsistencia = empleados.map((empleado) => {
+      const asistencia = asistenciasMap.get(empleado.dni)
+      return {
+        ...empleado,
+        asistencia: asistencia || null,
+      }
+    })
+  }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Registro de Asistencia</h1>
-        <p className="text-gray-500">Control de ingreso y salida del personal</p>
+        <p className="text-gray-500">
+          {esEmpleado ? "Registra tu ingreso y salida" : "Control de ingreso y salida del personal"}
+        </p>
       </div>
 
       {permisos.asistencia.crear && (
@@ -56,7 +101,11 @@ export default async function AsistenciaPage() {
             <CardTitle>Marcar Asistencia</CardTitle>
           </CardHeader>
           <CardContent>
-            <RegistroAsistencia empleados={empleados || []} />
+            <RegistroAsistencia 
+              empleados={empleados} 
+              dniEmpleadoFijo={esEmpleado ? user.dni_empleado || undefined : undefined}
+              modoEmpleado={esEmpleado}
+            />
           </CardContent>
         </Card>
       )}
@@ -64,7 +113,7 @@ export default async function AsistenciaPage() {
       {permisos.asistencia.ver && (
         <Card>
           <CardHeader>
-            <CardTitle>Asistencias de Hoy</CardTitle>
+            <CardTitle>{esEmpleado ? "Mi Asistencia de Hoy" : "Asistencias de Hoy"}</CardTitle>
           </CardHeader>
           <CardContent>
             <AsistenciaTable empleadosConAsistencia={empleadosConAsistencia} />

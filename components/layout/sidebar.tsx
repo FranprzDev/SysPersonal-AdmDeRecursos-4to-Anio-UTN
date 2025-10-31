@@ -16,6 +16,7 @@ import {
   BarChart3,
   History,
   Home,
+  User,
 } from "lucide-react"
 
 const navigation = [
@@ -31,15 +32,29 @@ const navigation = [
   { name: "Desempeño", href: "/dashboard/desempeno", icon: BarChart3, modulo: "desempeno" as const },
 ]
 
+const navigationEmpleado = [
+  { name: "Mi Perfil", href: "/dashboard/mi-perfil", icon: User, modulo: null as any },
+  { name: "Asistencia", href: "/dashboard/asistencia", icon: Clock, modulo: "asistencia" as const },
+]
+
 export function Sidebar({ rol }: { rol: RolSistema }) {
   const pathname = usePathname()
 
-  const navigationFiltrada = navigation.filter((item) => {
-    if (item.href === "/dashboard") {
-      return true
-    }
-    return puedeAccederAModulo(rol, item.modulo)
-  })
+  const esEmpleado = rol === "empleado"
+  
+  const navigationFiltrada = esEmpleado
+    ? navigationEmpleado.filter((item) => {
+        if (item.modulo === null) {
+          return true
+        }
+        return puedeAccederAModulo(rol, item.modulo)
+      })
+    : navigation.filter((item) => {
+        if (item.href === "/dashboard") {
+          return true
+        }
+        return puedeAccederAModulo(rol, item.modulo)
+      })
 
   return (
     <div className="flex w-64 flex-col bg-white border-r border-gray-200">

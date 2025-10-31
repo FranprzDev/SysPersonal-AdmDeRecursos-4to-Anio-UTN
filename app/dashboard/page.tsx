@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { getSession } from "@/lib/auth"
 import { getPermisosPorRol } from "@/lib/permissions"
+import { redirect } from "next/navigation"
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient()
@@ -12,6 +13,10 @@ export default async function DashboardPage() {
 
   if (!user) {
     return null
+  }
+
+  if (user.rol_sistema === "empleado") {
+    redirect("/dashboard/mi-perfil")
   }
 
   const permisos = getPermisosPorRol(user.rol_sistema)

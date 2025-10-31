@@ -81,7 +81,7 @@ export default async function DesempenoPage() {
       bgColor: "bg-orange-100",
     },
     {
-      title: "Asistencia Promedio",
+      title: "Asistencia Promedio del día",
       value: `${asistenciaPromedio}%`,
       icon: TrendingUp,
       color: "text-green-600",
