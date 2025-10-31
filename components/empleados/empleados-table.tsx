@@ -5,10 +5,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Edit, Trash2, Search, Plus } from "lucide-react"
+import { Edit, Trash2, Search, Plus, Eye } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import Link from "next/link"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -133,10 +134,15 @@ export function EmpleadosTable({ empleados }: { empleados: any[] }) {
           </TableHeader>
           <TableBody>
             {filteredEmpleados.map((empleado) => (
-              <TableRow key={empleado.dni}>
+              <TableRow key={empleado.dni} className="cursor-pointer hover:bg-gray-50">
                 <TableCell className="font-medium">{empleado.dni}</TableCell>
                 <TableCell>
-                  {empleado.nombre} {empleado.apellido}
+                  <Link
+                    href={`/dashboard/empleados/${encodeURIComponent(empleado.dni)}`}
+                    className="hover:underline"
+                  >
+                    {empleado.nombre} {empleado.apellido}
+                  </Link>
                 </TableCell>
                 <TableCell>{empleado.email}</TableCell>
                 <TableCell>{empleado.telefono || "-"}</TableCell>
@@ -148,12 +154,30 @@ export function EmpleadosTable({ empleados }: { empleados: any[] }) {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(empleado)}>
+                    <Link href={`/dashboard/empleados/${encodeURIComponent(empleado.dni)}`}>
+                      <Button variant="ghost" size="icon" title="Ver perfil">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleEdit(empleado)
+                      }}
+                      title="Editar"
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Dar de baja"
+                        >
                           <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>
                       </AlertDialogTrigger>
