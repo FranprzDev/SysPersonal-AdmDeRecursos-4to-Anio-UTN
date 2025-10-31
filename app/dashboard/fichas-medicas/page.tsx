@@ -7,12 +7,30 @@ import { FichaMedicaModal } from "@/components/fichas-medicas/ficha-medica-modal
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { toast } from "sonner"
+import { getPermisosPorRol } from "@/lib/permissions"
+import type { RolSistema } from "@/lib/permissions"
 
 export default function FichasMedicasPage() {
   const [fichas, setFichas] = useState<any[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedFicha, setSelectedFicha] = useState<any>(null)
+  const [rol, setRol] = useState<RolSistema>("admin")
   const supabase = createClient()
+
+  useEffect(() => {
+    const getUserSession = async () => {
+      const response = await fetch("/api/auth/session")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.user) {
+          setRol(data.user.rol_sistema)
+        }
+      }
+    }
+    getUserSession()
+  }, [])
+
+  const permisos = getPermisosPorRol(rol)
 
   const loadFichas = async () => {
     const { data } = await supabase
@@ -32,6 +50,7 @@ export default function FichasMedicasPage() {
   }, [])
 
   const handleEdit = (ficha: any) => {
+    if (!permisos.fichasMedicas.editar) return
     setSelectedFicha(ficha)
     setIsModalOpen(true)
   }
@@ -71,15 +90,19 @@ export default function FichasMedicasPage() {
           <h1 className="text-3xl font-bold text-gray-900">Fichas Médicas</h1>
           <p className="text-gray-500">Gestión de información médica del personal</p>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva Ficha Médica
-        </Button>
+        {permisos.fichasMedicas.crear && (
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva Ficha Médica
+          </Button>
+        )}
       </div>
 
-      <FichasMedicasTable fichas={fichas} onEdit={handleEdit} onDelete={handleDelete} />
+      <FichasMedicasTable fichas={fichas} onEdit={handleEdit} onDelete={handleDelete} permisos={permisos.fichasMedicas} />
 
-      <FichaMedicaModal isOpen={isModalOpen} onClose={handleCloseModal} ficha={selectedFicha} />
+      {permisos.fichasMedicas.crear || permisos.fichasMedicas.editar ? (
+        <FichaMedicaModal isOpen={isModalOpen} onClose={handleCloseModal} ficha={selectedFicha} />
+      ) : null}
     </div>
   )
 }

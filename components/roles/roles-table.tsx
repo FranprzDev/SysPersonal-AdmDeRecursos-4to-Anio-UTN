@@ -16,15 +16,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import type { Permisos } from "@/lib/permissions"
 
 interface RolesTableProps {
   roles: any[]
   onEdit: (rol: any) => void
   onDelete: () => void
+  permisos: Permisos["roles"]
 }
 
-export function RolesTable({ roles, onEdit, onDelete }: RolesTableProps) {
-  
+export function RolesTable({ roles, onEdit, onDelete, permisos }: RolesTableProps) {
   const supabase = createClient()
 
   const handleDelete = async (id: number) => {
@@ -55,13 +56,15 @@ export function RolesTable({ roles, onEdit, onDelete }: RolesTableProps) {
           <TableRow>
             <TableHead>Nombre</TableHead>
             <TableHead>Descripción</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
+            {(permisos.editar || permisos.eliminar) && (
+              <TableHead className="text-right">Acciones</TableHead>
+            )}
           </TableRow>
         </TableHeader>
         <TableBody>
           {roles.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={3} className="text-center text-gray-500 py-8">
+              <TableCell colSpan={permisos.editar || permisos.eliminar ? 3 : 2} className="text-center text-gray-500 py-8">
                 No hay roles registrados
               </TableCell>
             </TableRow>
@@ -70,32 +73,38 @@ export function RolesTable({ roles, onEdit, onDelete }: RolesTableProps) {
               <TableRow key={rol.id_rol}>
                 <TableCell className="font-medium">{rol.nombre_rol}</TableCell>
                 <TableCell>{rol.descripcion || "-"}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(rol)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4 text-red-600" />
+                {(permisos.editar || permisos.eliminar) && (
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      {permisos.editar && (
+                        <Button variant="ghost" size="icon" onClick={() => onEdit(rol)}>
+                          <Edit className="h-4 w-4" />
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            ¿Está seguro que desea eliminar este rol? Esta acción no se puede deshacer.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(rol.id_rol)}>Confirmar</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </TableCell>
+                      )}
+                      {permisos.eliminar && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                ¿Está seguro que desea eliminar este rol? Esta acción no se puede deshacer.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(rol.id_rol)}>Confirmar</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
