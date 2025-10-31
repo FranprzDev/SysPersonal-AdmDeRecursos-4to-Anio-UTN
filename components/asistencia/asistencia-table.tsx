@@ -1,9 +1,31 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 
 export function AsistenciaTable({ asistencias }: { asistencias: any[] }) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const formatTime = (dateString: string | null): string => {
+    if (!dateString) return "-"
+    if (!mounted) return "-"
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleTimeString("es-AR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+    } catch {
+      return "-"
+    }
+  }
+
   return (
     <div className="rounded-lg border">
       <Table>
@@ -32,12 +54,8 @@ export function AsistenciaTable({ asistencias }: { asistencias: any[] }) {
                     : asistencia.dni_empleado}
                 </TableCell>
                 <TableCell>{asistencia.dni_empleado}</TableCell>
-                <TableCell>
-                  {asistencia.hora_ingreso ? new Date(asistencia.hora_ingreso).toLocaleTimeString() : "-"}
-                </TableCell>
-                <TableCell>
-                  {asistencia.hora_salida ? new Date(asistencia.hora_salida).toLocaleTimeString() : "-"}
-                </TableCell>
+                <TableCell>{formatTime(asistencia.hora_ingreso)}</TableCell>
+                <TableCell>{formatTime(asistencia.hora_salida)}</TableCell>
                 <TableCell>
                   <Badge variant={asistencia.hora_salida ? "default" : "secondary"}>
                     {asistencia.hora_salida ? "Completo" : "En curso"}
