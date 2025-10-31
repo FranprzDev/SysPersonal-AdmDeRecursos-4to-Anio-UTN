@@ -6,12 +6,14 @@ import { FichasMedicasTable } from "@/components/fichas-medicas/fichas-medicas-t
 import { FichaMedicaModal } from "@/components/fichas-medicas/ficha-medica-modal"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 export default function FichasMedicasPage() {
   const [fichas, setFichas] = useState<any[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedFicha, setSelectedFicha] = useState<any>(null)
   const supabase = createClient()
+  const { toast } = useToast()
 
   const loadFichas = async () => {
     const { data } = await supabase
@@ -20,6 +22,7 @@ export default function FichasMedicasPage() {
         *,
         empleado:empleados(nombre, apellido, dni)
       `)
+      .eq("activo", true)
       .order("fecha_control", { ascending: false })
 
     setFichas(data || [])
@@ -45,6 +48,30 @@ export default function FichasMedicasPage() {
     loadFichas()
   }
 
+  const handleDelete = async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from("fichas_medicas")
+        .update({ activo: false })
+        .eq("id_ficha", id)
+
+      if (error) throw error
+
+      toast({
+        title: "Ficha médica eliminada",
+        description: "La ficha médica ha sido eliminada correctamente",
+      })
+
+      loadFichas()
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -58,7 +85,7 @@ export default function FichasMedicasPage() {
         </Button>
       </div>
 
-      <FichasMedicasTable fichas={fichas} onEdit={handleEdit} />
+      <FichasMedicasTable fichas={fichas} onEdit={handleEdit} onDelete={handleDelete} />
 
       <FichaMedicaModal isOpen={isModalOpen} onClose={handleCloseModal} ficha={selectedFicha} />
     </div>

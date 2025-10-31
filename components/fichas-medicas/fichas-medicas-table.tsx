@@ -3,14 +3,26 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Edit } from "lucide-react"
+import { Edit, Trash2 } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface FichasMedicasTableProps {
   fichas: any[]
   onEdit: (ficha: any) => void
+  onDelete: (id: number) => void
 }
 
-export function FichasMedicasTable({ fichas, onEdit }: FichasMedicasTableProps) {
+export function FichasMedicasTable({ fichas, onEdit, onDelete }: FichasMedicasTableProps) {
   return (
     <div className="rounded-lg border bg-white">
       <Table>
@@ -39,9 +51,32 @@ export function FichasMedicasTable({ fichas, onEdit }: FichasMedicasTableProps) 
               </TableCell>
               <TableCell>{ficha.fecha_control ? new Date(ficha.fecha_control).toLocaleDateString() : "-"}</TableCell>
               <TableCell className="text-right">
-                <Button variant="ghost" size="icon" onClick={() => onEdit(ficha)}>
-                  <Edit className="h-4 w-4" />
-                </Button>
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="icon" onClick={() => onEdit(ficha)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          ¿Está seguro que desea eliminar esta ficha médica? Esta acción se puede revertir.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => onDelete(ficha.id_ficha)}>
+                          Confirmar
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </TableCell>
             </TableRow>
           ))}
