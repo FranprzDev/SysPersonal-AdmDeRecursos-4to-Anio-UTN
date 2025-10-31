@@ -50,13 +50,28 @@ export default async function DesempenoPage() {
     .from("empleado_capacitacion")
     .select("*", { count: "exact", head: true })
 
-  const hoy = new Date().toISOString().split("T")[0]
+  const hoy = new Date()
+  const hoyStr = hoy.toISOString().split("T")[0]
+  const mesActual = hoy.getMonth()
+  const añoActual = hoy.getFullYear()
+  const inicioMes = new Date(añoActual, mesActual, 1).toISOString().split("T")[0]
+  const finMes = new Date(añoActual, mesActual + 1, 0).toISOString().split("T")[0]
+  const diasDelMes = new Date(añoActual, mesActual + 1, 0).getDate()
+
   const { count: asistenciasHoy } = await supabase
     .from("asistencias")
     .select("*", { count: "exact", head: true })
-    .eq("fecha", hoy)
+    .eq("fecha", hoyStr)
 
-  const asistenciaPromedio = totalEmpleados ? Math.round(((asistenciasHoy || 0) / totalEmpleados) * 100) : 0
+  const { count: asistenciasMes } = await supabase
+    .from("asistencias")
+    .select("*", { count: "exact", head: true })
+    .gte("fecha", inicioMes)
+    .lte("fecha", finMes)
+
+  const asistenciaPromedio = totalEmpleados && diasDelMes > 0
+    ? Math.round(((asistenciasMes || 0) / (totalEmpleados * diasDelMes)) * 100)
+    : 0
 
   const stats = [
     {
@@ -81,7 +96,7 @@ export default async function DesempenoPage() {
       bgColor: "bg-orange-100",
     },
     {
-      title: "Asistencia Promedio del día",
+      title: "Asistencia Promedio Mensual",
       value: `${asistenciaPromedio}%`,
       icon: TrendingUp,
       color: "text-green-600",
