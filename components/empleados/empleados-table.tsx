@@ -46,7 +46,9 @@ export function EmpleadosTable({ empleados }: { empleados: any[] }) {
     return matchesSearch && matchesSector && matchesEstado
   })
 
-  const sectores = Array.from(new Set(empleados.map((e) => e.sector?.nombre_sector).filter(Boolean)))
+  const sectoresUnicos = Array.from(
+    new Map(empleados.filter((e) => e.sector).map((e) => [e.sector.id_sector, e.sector])).values()
+  )
 
   const handleDelete = async (dni: string) => {
     try {
@@ -101,9 +103,9 @@ export function EmpleadosTable({ empleados }: { empleados: any[] }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los sectores</SelectItem>
-            {sectores.map((sector) => (
-              <SelectItem key={sector} value={sector}>
-                {sector}
+            {sectoresUnicos.map((sector) => (
+              <SelectItem key={sector.id_sector} value={sector.id_sector.toString()}>
+                {sector.nombre_sector}
               </SelectItem>
             ))}
           </SelectContent>
