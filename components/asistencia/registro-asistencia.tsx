@@ -22,11 +22,7 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
 
   const marcarIngreso = async () => {
     if (!dniEmpleado) {
-      toast({
-        title: "Error",
-        description: "Debe seleccionar un empleado",
-        variant: "destructive",
-      })
+      toast.error("Debe seleccionar un empleado")
       return
     }
 
@@ -34,19 +30,20 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
     try {
       const hoy = new Date().toISOString().split("T")[0]
 
-      const { data: existente } = await supabase
+      const { data: existente, error: errorExistente } = await supabase
         .from("asistencias")
         .select("*")
         .eq("dni_empleado", dniEmpleado)
         .eq("fecha", hoy)
-        .single()
+        .maybeSingle()
+
+      if (errorExistente && errorExistente.code !== "PGRST116") {
+        throw errorExistente
+      }
 
       if (existente && existente.hora_ingreso) {
-        toast({
-          title: "Error",
-          description: "Ya se registró el ingreso para hoy",
-          variant: "destructive",
-        })
+        toast.error("Ya se registró el ingreso para hoy")
+        setLoading(false)
         return
       }
 
@@ -60,19 +57,12 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
 
       if (error) throw error
 
-      toast({
-        title: "Ingreso registrado",
-        description: "Se ha registrado el ingreso correctamente",
-      })
+      toast.success("Se ha registrado el ingreso correctamente")
 
       setDniEmpleado("")
       router.refresh()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message || "Error al registrar el ingreso")
     } finally {
       setLoading(false)
     }
@@ -80,11 +70,7 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
 
   const marcarSalida = async () => {
     if (!dniEmpleado) {
-      toast({
-        title: "Error",
-        description: "Debe seleccionar un empleado",
-        variant: "destructive",
-      })
+      toast.error("Debe seleccionar un empleado")
       return
     }
 
@@ -92,28 +78,26 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
     try {
       const hoy = new Date().toISOString().split("T")[0]
 
-      const { data: existente } = await supabase
+      const { data: existente, error: errorExistente } = await supabase
         .from("asistencias")
         .select("*")
         .eq("dni_empleado", dniEmpleado)
         .eq("fecha", hoy)
-        .single()
+        .maybeSingle()
+
+      if (errorExistente && errorExistente.code !== "PGRST116") {
+        throw errorExistente
+      }
 
       if (!existente || !existente.hora_ingreso) {
-        toast({
-          title: "Error",
-          description: "Debe registrar el ingreso primero",
-          variant: "destructive",
-        })
+        toast.error("Debe registrar el ingreso primero")
+        setLoading(false)
         return
       }
 
       if (existente.hora_salida) {
-        toast({
-          title: "Error",
-          description: "Ya se registró la salida para hoy",
-          variant: "destructive",
-        })
+        toast.error("Ya se registró la salida para hoy")
+        setLoading(false)
         return
       }
 
@@ -124,19 +108,12 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
 
       if (error) throw error
 
-      toast({
-        title: "Salida registrada",
-        description: "Se ha registrado la salida correctamente",
-      })
+      toast.success("Se ha registrado la salida correctamente")
 
       setDniEmpleado("")
       router.refresh()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message || "Error al registrar la salida")
     } finally {
       setLoading(false)
     }
