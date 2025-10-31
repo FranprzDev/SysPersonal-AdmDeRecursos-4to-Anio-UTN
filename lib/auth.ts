@@ -11,7 +11,6 @@ export interface User {
 export async function login(email: string, password: string): Promise<User | null> {
   const supabase = await createClient()
 
-  // Buscar usuario en la base de datos
   const { data, error } = await supabase
     .from("usuarios")
     .select("*")
@@ -33,7 +32,7 @@ export async function setSession(user: User) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 días
+    maxAge: 60 * 60 * 24 * 7,
     path: "/",
   })
 }
