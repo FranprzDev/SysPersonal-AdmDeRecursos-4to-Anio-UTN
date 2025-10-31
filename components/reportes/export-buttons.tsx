@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import * as XLSX from "xlsx"
 
 interface ExportButtonsProps {
@@ -13,7 +13,7 @@ interface ExportButtonsProps {
 
 export function ExportButtons({ tipo }: ExportButtonsProps) {
   const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
+  
   const supabase = createClient()
 
   const exportToExcel = async () => {

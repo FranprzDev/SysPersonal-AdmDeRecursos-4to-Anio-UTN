@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import Link from "next/link"
 
 export default function RegisterPage() {
@@ -17,27 +17,18 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const { toast } = useToast()
   const supabase = createClient()
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (password !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Las contraseñas no coinciden",
-        variant: "destructive",
-      })
+      toast.error("Las contraseñas no coinciden")
       return
     }
 
     if (password.length < 6) {
-      toast({
-        title: "Error",
-        description: "La contraseña debe tener al menos 6 caracteres",
-        variant: "destructive",
-      })
+      toast.error("La contraseña debe tener al menos 6 caracteres")
       return
     }
 
@@ -54,21 +45,13 @@ export default function RegisterPage() {
 
       if (error) throw error
 
-      toast({
-        title: "Registro exitoso",
-        description: "Por favor verifica tu email para activar tu cuenta",
-      })
+      toast.success("Registro exitoso. Por favor verifica tu email para activar tu cuenta")
 
-      // Redirigir al login después de 2 segundos
       setTimeout(() => {
         router.push("/auth/login")
       }, 2000)
     } catch (error: any) {
-      toast({
-        title: "Error al registrarse",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message || "Error al registrarse")
     } finally {
       setLoading(false)
     }

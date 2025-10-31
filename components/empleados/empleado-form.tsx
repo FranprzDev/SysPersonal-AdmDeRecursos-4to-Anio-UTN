@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 interface EmpleadoFormProps {
   empleado?: any
@@ -20,7 +20,7 @@ interface EmpleadoFormProps {
 export function EmpleadoForm({ empleado, sectores, supervisores }: EmpleadoFormProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const { toast } = useToast()
+  
   const supabase = createClient()
 
   const [formData, setFormData] = useState({
@@ -56,11 +56,11 @@ export function EmpleadoForm({ empleado, sectores, supervisores }: EmpleadoFormP
       if (empleado) {
         const { error } = await supabase.from("empleados").update(dataToSave).eq("dni", empleado.dni)
         if (error) throw error
-        toast({ title: "Empleado actualizado correctamente" })
+        toast.success("Empleado actualizado correctamente")
       } else {
         const { error } = await supabase.from("empleados").insert([dataToSave])
         if (error) throw error
-        toast({ title: "Empleado creado correctamente" })
+        toast.success("Empleado creado correctamente")
       }
 
       router.push("/dashboard/empleados")

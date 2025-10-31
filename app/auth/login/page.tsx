@@ -7,14 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const { toast } = useToast()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,32 +33,20 @@ export default function LoginPage() {
         data = await response.json()
       } else {
         const text = await response.text()
-        throw new Error("Error del servidor. Por favor intenta nuevamente.")
+        throw new Error(`Error del servidor: ${text || "Respuesta no válida"}`)
       }
 
       if (!response.ok) {
-        toast({
-          title: "Credenciales incorrectas",
-          description: data.error || "Verifica tu email y contraseña.",
-          variant: "destructive",
-        })
+        toast.error(data.error || "Verifica tu email y contraseña.")
         setLoading(false)
         return
       }
 
-      toast({
-        title: "Inicio de sesión exitoso",
-        description: "Bienvenido al sistema",
-      })
-
+      toast.success("Inicio de sesión exitoso")
       await new Promise((resolve) => setTimeout(resolve, 100))
       window.location.href = "/dashboard"
     } catch (error: any) {
-      toast({
-        title: "Error de conexión",
-        description: error.message || "No se pudo conectar con el servidor. Intenta nuevamente.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "No se pudo conectar con el servidor. Intenta nuevamente.")
       setLoading(false)
     }
   }

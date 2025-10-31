@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 interface FichaMedicaFormProps {
   ficha?: any
@@ -22,7 +22,7 @@ export function FichaMedicaForm({ ficha, empleados }: FichaMedicaFormProps) {
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const router = useRouter()
-  const { toast } = useToast()
+  
   const supabase = createClient()
 
   const [formData, setFormData] = useState({
@@ -55,7 +55,7 @@ export function FichaMedicaForm({ ficha, empleados }: FichaMedicaFormProps) {
       } = supabase.storage.from("documentos").getPublicUrl(filePath)
 
       setFormData({ ...formData, documento_adjunto: publicUrl })
-      toast({ title: "Archivo subido correctamente" })
+      toast.success("Archivo subido correctamente")
     } catch (error: any) {
       toast({
         title: "Error al subir archivo",
@@ -75,11 +75,11 @@ export function FichaMedicaForm({ ficha, empleados }: FichaMedicaFormProps) {
       if (ficha) {
         const { error } = await supabase.from("fichas_medicas").update(formData).eq("id_ficha", ficha.id_ficha)
         if (error) throw error
-        toast({ title: "Ficha médica actualizada correctamente" })
+        toast.success("Ficha médica actualizada correctamente")
       } else {
         const { error } = await supabase.from("fichas_medicas").insert([formData])
         if (error) throw error
-        toast({ title: "Ficha médica creada correctamente" })
+        toast.success("Ficha médica creada correctamente")
       }
 
       router.push("/dashboard/fichas-medicas")

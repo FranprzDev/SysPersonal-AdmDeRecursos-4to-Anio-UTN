@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 interface RolModalProps {
   open: boolean
@@ -24,7 +24,6 @@ type RolFormData = {
 
 export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) {
   const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
   const supabase = createClient()
 
   const {
@@ -60,21 +59,17 @@ export function RolModal({ open, onOpenChange, rol, onSuccess }: RolModalProps) 
       if (rol) {
         const { error } = await supabase.from("roles").update(data).eq("id_rol", rol.id_rol)
         if (error) throw error
-        toast({ title: "Rol actualizado correctamente" })
+        toast.success("Rol actualizado correctamente")
       } else {
         const { error } = await supabase.from("roles").insert([data])
         if (error) throw error
-        toast({ title: "Rol creado correctamente" })
+        toast.success("Rol creado correctamente")
       }
 
       onSuccess()
       onOpenChange(false)
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message || "Error al guardar el rol")
     } finally {
       setLoading(false)
     }

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Edit, Trash2, Search, Plus } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +30,6 @@ export function EmpleadosTable({ empleados }: { empleados: any[] }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedEmpleado, setSelectedEmpleado] = useState<any>(null)
   const router = useRouter()
-  const { toast } = useToast()
   const supabase = createClient()
 
   const filteredEmpleados = empleados.filter((emp) => {
@@ -56,18 +55,11 @@ export function EmpleadosTable({ empleados }: { empleados: any[] }) {
 
       if (error) throw error
 
-      toast({
-        title: "Empleado dado de baja",
-        description: "El empleado ha sido dado de baja correctamente",
-      })
+      toast.success("El empleado ha sido dado de baja correctamente")
 
       router.refresh()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message || "Error al dar de baja el empleado")
     }
   }
 
