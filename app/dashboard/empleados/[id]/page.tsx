@@ -358,4 +358,3 @@ export default async function EmpleadoProfilePage({ params }: { params: { id: st
     </div>
   )
 }
-

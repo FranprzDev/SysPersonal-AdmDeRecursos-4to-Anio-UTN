@@ -78,4 +78,3 @@ FOR SELECT USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Authenticated users can view historial sectores" ON historial_sectores
 FOR SELECT USING (auth.role() = 'authenticated');
-

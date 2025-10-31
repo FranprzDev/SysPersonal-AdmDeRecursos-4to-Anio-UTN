@@ -16,4 +16,3 @@ SELECT * FROM usuarios;
 -- ('rrhh@empresa.com', '$2a$10$...', 'rrhh', NULL, true),
 -- ('supervisor@empresa.com', '$2a$10$...', 'supervisor', NULL, true)
 -- ON CONFLICT (email) DO UPDATE SET activo = true;
-

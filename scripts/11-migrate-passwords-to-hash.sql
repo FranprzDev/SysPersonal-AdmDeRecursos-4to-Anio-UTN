@@ -6,4 +6,3 @@
 -- Usa el endpoint API o el script Node.js para hashear las contraseñas
 
 -- Después de hashear, puedes eliminar este comentario
-
