@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { EmpleadosTable } from "@/components/empleados/empleados-table"
 import { getSession } from "@/lib/auth"
 import { getPermisosPorRol } from "@/lib/permissions"
+import { redirect } from "next/navigation"
 
 export default async function EmpleadosPage() {
   const supabase = await createServerSupabaseClient()
@@ -9,6 +10,10 @@ export default async function EmpleadosPage() {
 
   if (!user) {
     return null
+  }
+
+  if (user.rol_sistema === "empleado") {
+    redirect("/dashboard/mi-perfil")
   }
 
   const permisos = getPermisosPorRol(user.rol_sistema)

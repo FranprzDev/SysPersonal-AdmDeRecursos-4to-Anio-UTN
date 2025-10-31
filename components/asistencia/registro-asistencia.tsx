@@ -10,19 +10,24 @@ import { useRouter } from "next/navigation"
 import { LogIn, LogOut } from "lucide-react"
 
 interface RegistroAsistenciaProps {
-  empleados: any[]
+  empleados?: any[]
+  dniEmpleadoFijo?: string
+  modoEmpleado?: boolean
 }
 
-export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
-  const [dniEmpleado, setDniEmpleado] = useState("")
+export function RegistroAsistencia({ empleados = [], dniEmpleadoFijo, modoEmpleado = false }: RegistroAsistenciaProps) {
+  const dniEmpleado = modoEmpleado ? (dniEmpleadoFijo || "") : ""
+  const [dniEmpleadoSeleccionado, setDniEmpleadoSeleccionado] = useState(modoEmpleado ? dniEmpleadoFijo || "" : "")
   const [loading, setLoading] = useState(false)
   
   const router = useRouter()
   const supabase = createClient()
 
+  const dniParaUsar = modoEmpleado ? dniEmpleado : dniEmpleadoSeleccionado
+
   const marcarIngreso = async () => {
-    if (!dniEmpleado) {
-      toast.error("Debe seleccionar un empleado")
+    if (!dniParaUsar) {
+      toast.error(modoEmpleado ? "Error: No se pudo identificar su usuario" : "Debe seleccionar un empleado")
       return
     }
 
@@ -33,7 +38,7 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
       const { data: existente, error: errorExistente } = await supabase
         .from("asistencias")
         .select("*")
-        .eq("dni_empleado", dniEmpleado)
+        .eq("dni_empleado", dniParaUsar)
         .eq("fecha", hoy)
         .maybeSingle()
 
@@ -49,7 +54,7 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
 
       const { error } = await supabase.from("asistencias").insert([
         {
-          dni_empleado: dniEmpleado,
+          dni_empleado: dniParaUsar,
           fecha: hoy,
           hora_ingreso: new Date().toISOString(),
         },
@@ -59,7 +64,9 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
 
       toast.success("Se ha registrado el ingreso correctamente")
 
-      setDniEmpleado("")
+      if (!modoEmpleado) {
+        setDniEmpleadoSeleccionado("")
+      }
       router.refresh()
     } catch (error: any) {
       toast.error(error.message || "Error al registrar el ingreso")
@@ -69,8 +76,8 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
   }
 
   const marcarSalida = async () => {
-    if (!dniEmpleado) {
-      toast.error("Debe seleccionar un empleado")
+    if (!dniParaUsar) {
+      toast.error(modoEmpleado ? "Error: No se pudo identificar su usuario" : "Debe seleccionar un empleado")
       return
     }
 
@@ -81,7 +88,7 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
       const { data: existente, error: errorExistente } = await supabase
         .from("asistencias")
         .select("*")
-        .eq("dni_empleado", dniEmpleado)
+        .eq("dni_empleado", dniParaUsar)
         .eq("fecha", hoy)
         .maybeSingle()
 
@@ -110,7 +117,9 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
 
       toast.success("Se ha registrado la salida correctamente")
 
-      setDniEmpleado("")
+      if (!modoEmpleado) {
+        setDniEmpleadoSeleccionado("")
+      }
       router.refresh()
     } catch (error: any) {
       toast.error(error.message || "Error al registrar la salida")
@@ -119,30 +128,48 @@ export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
     }
   }
 
+  if (modoEmpleado && !dniEmpleadoFijo) {
+    return (
+      <div className="p-4 text-center text-gray-500">
+        Error: No se pudo identificar su usuario. Por favor, contacte al administrador.
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="empleado">Seleccionar Empleado</Label>
-        <Select value={dniEmpleado} onValueChange={setDniEmpleado}>
-          <SelectTrigger>
-            <SelectValue placeholder="Seleccionar empleado" />
-          </SelectTrigger>
-          <SelectContent>
-            {empleados.map((emp) => (
-              <SelectItem key={emp.dni} value={emp.dni}>
-                {emp.nombre} {emp.apellido} ({emp.dni})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {!modoEmpleado && (
+        <div className="space-y-2">
+          <Label htmlFor="empleado">Seleccionar Empleado</Label>
+          <Select value={dniEmpleadoSeleccionado} onValueChange={setDniEmpleadoSeleccionado}>
+            <SelectTrigger>
+              <SelectValue placeholder="Seleccionar empleado" />
+            </SelectTrigger>
+            <SelectContent>
+              {empleados.map((emp) => (
+                <SelectItem key={emp.dni} value={emp.dni}>
+                  {emp.nombre} {emp.apellido} ({emp.dni})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {modoEmpleado && (
+        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-sm text-blue-800 font-medium">
+            Registrando asistencia para: {empleados[0]?.nombre} {empleados[0]?.apellido}
+          </p>
+        </div>
+      )}
 
       <div className="flex gap-4">
-        <Button onClick={marcarIngreso} disabled={loading} className="flex-1">
+        <Button onClick={marcarIngreso} disabled={loading || !dniParaUsar} className="flex-1">
           <LogIn className="mr-2 h-4 w-4" />
           Marcar Ingreso
         </Button>
-        <Button onClick={marcarSalida} disabled={loading} variant="outline" className="flex-1 bg-transparent">
+        <Button onClick={marcarSalida} disabled={loading || !dniParaUsar} variant="outline" className="flex-1 bg-transparent">
           <LogOut className="mr-2 h-4 w-4" />
           Marcar Salida
         </Button>
