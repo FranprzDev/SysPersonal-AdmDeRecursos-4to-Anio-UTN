@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 interface CapacitacionFormProps {
   capacitacion?: any
@@ -19,7 +19,7 @@ interface CapacitacionFormProps {
 export function CapacitacionForm({ capacitacion }: CapacitacionFormProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const { toast } = useToast()
+  
   const supabase = createClient()
 
   const [formData, setFormData] = useState({
@@ -41,11 +41,11 @@ export function CapacitacionForm({ capacitacion }: CapacitacionFormProps) {
           .update(formData)
           .eq("id_capacitacion", capacitacion.id_capacitacion)
         if (error) throw error
-        toast({ title: "Capacitación actualizada correctamente" })
+        toast.success("Capacitación actualizada correctamente")
       } else {
         const { error } = await supabase.from("capacitaciones").insert([formData])
         if (error) throw error
-        toast({ title: "Capacitación creada correctamente" })
+        toast.success("Capacitación creada correctamente")
       }
 
       router.push("/dashboard/capacitaciones")

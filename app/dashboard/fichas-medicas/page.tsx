@@ -6,14 +6,13 @@ import { FichasMedicasTable } from "@/components/fichas-medicas/fichas-medicas-t
 import { FichaMedicaModal } from "@/components/fichas-medicas/ficha-medica-modal"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export default function FichasMedicasPage() {
   const [fichas, setFichas] = useState<any[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedFicha, setSelectedFicha] = useState<any>(null)
   const supabase = createClient()
-  const { toast } = useToast()
 
   const loadFichas = async () => {
     const { data } = await supabase
@@ -57,18 +56,11 @@ export default function FichasMedicasPage() {
 
       if (error) throw error
 
-      toast({
-        title: "Ficha médica eliminada",
-        description: "La ficha médica ha sido eliminada correctamente",
-      })
+      toast.success("La ficha médica ha sido eliminada correctamente")
 
       loadFichas()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message || "Error al eliminar la ficha médica")
     }
   }
 

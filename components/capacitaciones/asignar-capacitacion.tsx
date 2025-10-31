@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Search } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
@@ -30,7 +30,7 @@ export function AsignarCapacitacion({ capacitacionId, open, onOpenChange, onSucc
   const [searchTerm, setSearchTerm] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(false)
   const [loadingData, setLoadingData] = useState<boolean>(true)
-  const { toast } = useToast()
+  
   const supabase = createClient()
 
   useEffect(() => {
@@ -117,7 +117,7 @@ export function AsignarCapacitacion({ capacitacionId, open, onOpenChange, onSucc
         if (error) throw error
       }
 
-      toast({ title: "Empleados asignados correctamente" })
+      toast.success("Empleados asignados correctamente")
       onOpenChange(false)
       if (onSuccess) onSuccess()
     } catch (error: any) {

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { FileText, Upload, X, Download } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -39,7 +39,7 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
   const [previewFile, setPreviewFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { toast } = useToast()
+  
   const supabase = createClient()
 
   const {
@@ -115,20 +115,12 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
     const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
 
     if (file.size > maxSize) {
-      toast({
-        title: "Error al subir archivo",
-        description: "El archivo es demasiado grande. Máximo 10MB",
-        variant: "destructive",
-      })
+      toast.error("El archivo es demasiado grande. Máximo 10MB")
       return
     }
 
     if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Error al subir archivo",
-        description: "Tipo de archivo no permitido. Solo PDF, JPEG y PNG",
-        variant: "destructive",
-      })
+      toast.error("Tipo de archivo no permitido. Solo PDF, JPEG y PNG")
       return
     }
 
@@ -155,17 +147,10 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
 
       setValue("documento_adjunto", result.url)
       setPreviewFile(null)
-      toast({
-        title: "Archivo subido correctamente",
-        description: `Archivo: ${file.name}`,
-      })
+      toast.success(`Archivo subido correctamente: ${file.name}`)
     } catch (error: any) {
       console.error("Error completo:", error)
-      toast({
-        title: "Error al subir archivo",
-        description: error.message || "Error desconocido al subir el archivo",
-        variant: "destructive",
-      })
+      toast.error(error.message || "Error desconocido al subir el archivo")
       setPreviewFile(null)
     } finally {
       setUploading(false)
@@ -225,20 +210,12 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
     const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
 
     if (file.size > maxSize) {
-      toast({
-        title: "Error al subir archivo",
-        description: "El archivo es demasiado grande. Máximo 10MB",
-        variant: "destructive",
-      })
+      toast.error("El archivo es demasiado grande. Máximo 10MB")
       return
     }
 
     if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Error al subir archivo",
-        description: "Tipo de archivo no permitido. Solo PDF, JPEG y PNG",
-        variant: "destructive",
-      })
+      toast.error("Tipo de archivo no permitido. Solo PDF, JPEG y PNG")
       return
     }
 
@@ -253,20 +230,16 @@ export function FichaMedicaModal({ isOpen, onClose, ficha }: FichaMedicaModalPro
       if (ficha) {
         const { error } = await supabase.from("fichas_medicas").update(data).eq("id_ficha", ficha.id_ficha)
         if (error) throw error
-        toast({ title: "Ficha médica actualizada correctamente" })
+        toast.success("Ficha médica actualizada correctamente")
       } else {
         const { error } = await supabase.from("fichas_medicas").insert([data])
         if (error) throw error
-        toast({ title: "Ficha médica creada correctamente" })
+        toast.success("Ficha médica creada correctamente")
       }
 
       onClose()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message || "Error al guardar la ficha médica")
     } finally {
       setLoading(false)
     }

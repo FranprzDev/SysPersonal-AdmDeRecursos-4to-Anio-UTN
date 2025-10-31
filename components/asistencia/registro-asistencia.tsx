@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { LogIn, LogOut } from "lucide-react"
 
@@ -16,7 +16,7 @@ interface RegistroAsistenciaProps {
 export function RegistroAsistencia({ empleados }: RegistroAsistenciaProps) {
   const [dniEmpleado, setDniEmpleado] = useState("")
   const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
+  
   const router = useRouter()
   const supabase = createClient()
 

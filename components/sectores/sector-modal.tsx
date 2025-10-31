@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface SectorModalProps {
@@ -27,7 +27,7 @@ type SectorFormData = {
 export function SectorModal({ open, onOpenChange, sector, onSuccess }: SectorModalProps) {
   const [loading, setLoading] = useState(false)
   const [supervisores, setSupervisores] = useState<any[]>([])
-  const { toast } = useToast()
+  
   const supabase = createClient()
 
   const {
@@ -91,11 +91,11 @@ export function SectorModal({ open, onOpenChange, sector, onSuccess }: SectorMod
       if (sector) {
         const { error } = await supabase.from("sectores").update(dataToSave).eq("id_sector", sector.id_sector)
         if (error) throw error
-        toast({ title: "Sector actualizado correctamente" })
+        toast.success("Sector actualizado correctamente")
       } else {
         const { error } = await supabase.from("sectores").insert([dataToSave])
         if (error) throw error
-        toast({ title: "Sector creado correctamente" })
+        toast.success("Sector creado correctamente")
       }
 
       onOpenChange(false)

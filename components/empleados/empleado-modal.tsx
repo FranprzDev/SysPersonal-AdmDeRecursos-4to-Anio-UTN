@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient } from "@/lib/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { useState } from "react"
 
 interface EmpleadoModalProps {
@@ -35,7 +35,6 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
   const [loading, setLoading] = useState(false)
   const [sectores, setSectores] = useState<any[]>([])
   const [supervisores, setSupervisores] = useState<any[]>([])
-  const { toast } = useToast()
   const supabase = createClient()
 
   const {
@@ -126,21 +125,17 @@ export function EmpleadoModal({ open, onOpenChange, empleado, onSuccess }: Emple
       if (empleado) {
         const { error } = await supabase.from("empleados").update(dataToSave).eq("dni", empleado.dni)
         if (error) throw error
-        toast({ title: "Empleado actualizado correctamente" })
+        toast.success("Empleado actualizado correctamente")
       } else {
         const { error } = await supabase.from("empleados").insert([dataToSave])
         if (error) throw error
-        toast({ title: "Empleado creado correctamente" })
+        toast.success("Empleado creado correctamente")
       }
 
       onSuccess()
       onOpenChange(false)
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast.error(error.message || "Error al guardar el empleado")
     } finally {
       setLoading(false)
     }

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { createClient } from "@/lib/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 interface CapacitacionModalProps {
   open: boolean
@@ -27,7 +27,7 @@ type CapacitacionFormData = {
 
 export function CapacitacionModal({ open, onOpenChange, capacitacion, onSuccess }: CapacitacionModalProps) {
   const [loading, setLoading] = useState(false)
-  const { toast } = useToast()
+  
   const supabase = createClient()
 
   const {
@@ -75,11 +75,11 @@ export function CapacitacionModal({ open, onOpenChange, capacitacion, onSuccess 
           .update(data)
           .eq("id_capacitacion", capacitacion.id_capacitacion)
         if (error) throw error
-        toast({ title: "Capacitación actualizada correctamente" })
+        toast.success("Capacitación actualizada correctamente")
       } else {
         const { error } = await supabase.from("capacitaciones").insert([data])
         if (error) throw error
-        toast({ title: "Capacitación creada correctamente" })
+        toast.success("Capacitación creada correctamente")
       }
 
       onSuccess()

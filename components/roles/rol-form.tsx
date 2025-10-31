@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 interface RolFormProps {
   rol?: any
@@ -19,7 +19,7 @@ interface RolFormProps {
 export function RolForm({ rol }: RolFormProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const { toast } = useToast()
+  
   const supabase = createClient()
 
   const [formData, setFormData] = useState({
@@ -35,11 +35,11 @@ export function RolForm({ rol }: RolFormProps) {
       if (rol) {
         const { error } = await supabase.from("roles").update(formData).eq("id_rol", rol.id_rol)
         if (error) throw error
-        toast({ title: "Rol actualizado correctamente" })
+        toast.success("Rol actualizado correctamente")
       } else {
         const { error } = await supabase.from("roles").insert([formData])
         if (error) throw error
-        toast({ title: "Rol creado correctamente" })
+        toast.success("Rol creado correctamente")
       }
 
       router.push("/dashboard/roles")

@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Edit, Trash2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +24,7 @@ interface RolesTableProps {
 }
 
 export function RolesTable({ roles, onEdit, onDelete }: RolesTableProps) {
-  const { toast } = useToast()
+  
   const supabase = createClient()
 
   const handleDelete = async (id: number) => {

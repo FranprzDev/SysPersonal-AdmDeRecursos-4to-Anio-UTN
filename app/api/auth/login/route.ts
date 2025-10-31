@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createApiClient } from "@/lib/supabase/api"
+import { compare } from "bcryptjs"
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,31 +10,57 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email y contraseña son requeridos" }, { status: 400 })
     }
 
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return NextResponse.json({ error: "Error de configuración del servidor" }, { status: 500 })
+    }
+
     const supabase = createApiClient()
 
     const { data: user, error } = await supabase
       .from("usuarios")
       .select("*")
       .eq("email", email)
-      .eq("password", password)
-      .eq("activo", true)
       .maybeSingle()
 
     if (error) {
-      return NextResponse.json({ error: "Error al consultar la base de datos" }, { status: 500 })
+      return NextResponse.json({ 
+        error: "Error al consultar la base de datos",
+        details: error.message,
+        code: error.code 
+      }, { status: 500 })
     }
 
     if (!user) {
       return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 })
     }
 
-    const response = NextResponse.json({ success: true, user })
+    if (!user.activo) {
+      return NextResponse.json({ error: "Usuario inactivo" }, { status: 401 })
+    }
 
-    response.cookies.set("user_session", JSON.stringify(user), {
+    const isPasswordHashed = user.password.startsWith("$2a$") || user.password.startsWith("$2b$")
+    
+    let passwordMatch = false
+    
+    if (isPasswordHashed) {
+      passwordMatch = await compare(password, user.password)
+    } else {
+      passwordMatch = password === user.password
+    }
+
+    if (!passwordMatch) {
+      return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 })
+    }
+
+    const { password: _, ...userWithoutPassword } = user
+
+    const response = NextResponse.json({ success: true, user: userWithoutPassword })
+
+    response.cookies.set("user_session", JSON.stringify(userWithoutPassword), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 días
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
     })
 
